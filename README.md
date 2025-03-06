@@ -90,7 +90,7 @@ export default defineConfig({
 
 ### 3.引入ElementPlus
 
-#### 3.1安装ElementPlus
+#### 3.1 安装ElementPlus
 ```
 # NPM
 $ npm install element-plus --save
@@ -102,7 +102,7 @@ $ yarn add element-plus
 $ pnpm install element-plus
 ```
 
-#### 3.2配置按需导入
+#### 3.2 配置按需导入
 根据官方文档配置按需导入，需要安装对应插件
 ```
 npm install -D unplugin-vue-components unplugin-auto-import
@@ -139,6 +139,123 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
   },
+})
+
+```
+***这里注意配置完之后需要重新启动一下项目，确保配置生效***
+
+
+
+
+#### 3.3 ElementPlus主题定制
+
+`如何项目的主题色与ElementPlus主题色存在冲突，可以通过定制主题让ElementPlus的主题色和项目保持一致。`
+
+##### 3.3.1 安装sass
+```
+npm i sass -D
+```
+
+##### 3.3.2 设置定制化的样式文件
+在src/style/index.scss，内编辑项目的样式。
+一下是官方文档说明：
+```
+// styles/element/index.scss
+/* 只需要重写你需要的即可 */
+@forward 'element-plus/theme-chalk/src/common/var.scss' with (
+  $colors: (
+    'primary': (
+      'base': green,
+    ),
+  ),
+);
+
+// 如果只是按需导入，则可以忽略以下内容。
+// 如果你想导入所有样式:
+// @use "element-plus/theme-chalk/src/index.scss" as *;
+```
+该项目的配置文件如下：
+```
+/* 只需要重写你需要的即可 */
+@forward 'element-plus/theme-chalk/src/common/var.scss' with (
+  $colors: (
+    'primary': (
+      // 主色
+      'base': #27ba9b,
+    ),
+    'success': (
+      // 成功色
+      'base': #1dc779,
+    ),
+    'warning': (
+      // 警告色
+      'base': #ffb302,
+    ),
+    'danger': (
+      // 危险色
+      'base': #e26237,
+    ),
+    'error': (
+      // 错误色
+      'base': #cf4444,
+    ),
+  )
+)
+```
+##### 3.3.3 配置自动导入
+这里自动导入需要深入到ElementPlus的组件中，按照官方配置文档来。
+    1. 配置ElementPlus采用sass样式配色系统
+    2. 自动导入定制化样式文件进行样式覆盖
+
+对vite.config.js文件进行配置修改如下：
+```
+import { fileURLToPath, URL } from 'node:url'
+
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import vueDevTools from 'vite-plugin-vue-devtools'
+
+// 配置ElementPlus按需导入
+import AutoImport from 'unplugin-auto-import/vite'
+import Components from 'unplugin-vue-components/vite'
+import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
+
+// https://vite.dev/config/
+export default defineConfig({
+  plugins: [
+    vue(),
+    vueDevTools(),
+    // ElementPlus按需引入的插件配置
+    AutoImport({
+      resolvers: [ElementPlusResolver()],
+    }),
+    Components({
+      // resolvers: [ElementPlusResolver()],
+      resolvers:[
+        // 自定义主题：1. 配置ElementPlus采用sass样式配色系统
+        ElementPlusResolver({
+          importStyle:'sass'
+        })
+      ]
+    }),
+  ],
+  resolve: {
+    // 实际的路径转换 @ -> src
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url))
+    },
+  },
+  // 自定义主题：2. 配置ElementPlus自动导入
+  css: {
+    preprocessorOptions: {
+      scss: {
+        // 自动导入定制化样式文件进行样式覆盖
+        additionalData: `
+          @use "@/styles/element/index.scss" as *;
+        `,
+      }
+    }
+  }
 })
 
 ```
