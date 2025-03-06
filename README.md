@@ -43,8 +43,6 @@ git push origin dev		// 将本地dev推送到远端dev
 
 ### 2.项目起步-配置别名路径联想提示
 
-
-
 #### 2.1 新建配置文件
 在项目根路径下新增 `jsconfig.json` 文件
 
@@ -88,3 +86,59 @@ export default defineConfig({
 })
 ```
 
+
+
+### 3.引入ElementPlus
+
+#### 3.1安装ElementPlus
+```
+# NPM
+$ npm install element-plus --save
+
+# Yarn
+$ yarn add element-plus
+
+# pnpm
+$ pnpm install element-plus
+```
+
+#### 3.2配置按需导入
+根据官方文档配置按需导入，需要安装对应插件
+```
+npm install -D unplugin-vue-components unplugin-auto-import
+```
+安装完毕之后，需要对vite.config.js进行配置插件
+```
+import { fileURLToPath, URL } from 'node:url'
+
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import vueDevTools from 'vite-plugin-vue-devtools'
+
+// 1.引入插件配置ElementPlus按需导入
+import AutoImport from 'unplugin-auto-import/vite'
+import Components from 'unplugin-vue-components/vite'
+import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
+
+// https://vite.dev/config/
+export default defineConfig({
+  plugins: [
+    vue(),
+    vueDevTools(),
+    // 2.配置ElementPlus按需引入的插件
+    AutoImport({
+      resolvers: [ElementPlusResolver()],
+    }),
+    Components({
+      resolvers: [ElementPlusResolver()],
+    }),
+  ],
+  resolve: {
+    // 实际的路径转换 @ -> src
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url))
+    },
+  },
+})
+
+```
