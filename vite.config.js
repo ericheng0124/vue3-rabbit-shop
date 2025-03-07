@@ -1,13 +1,13 @@
-import { fileURLToPath, URL } from 'node:url'
+import { fileURLToPath, URL } from "node:url";
 
-import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
-import vueDevTools from 'vite-plugin-vue-devtools'
+import { defineConfig } from "vite";
+import vue from "@vitejs/plugin-vue";
+import vueDevTools from "vite-plugin-vue-devtools";
 
 // 配置ElementPlus按需导入
-import AutoImport from 'unplugin-auto-import/vite'
-import Components from 'unplugin-vue-components/vite'
-import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
+import AutoImport from "unplugin-auto-import/vite";
+import Components from "unplugin-vue-components/vite";
+import { ElementPlusResolver } from "unplugin-vue-components/resolvers";
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -20,18 +20,18 @@ export default defineConfig({
     }),
     Components({
       // resolvers: [ElementPlusResolver()],
-      resolvers:[
+      resolvers: [
         // 自定义主题：1. 配置ElementPlus采用sass样式配色系统
         ElementPlusResolver({
-          importStyle:'sass'
-        })
-      ]
+          importStyle: "sass",
+        }),
+      ],
     }),
   ],
   resolve: {
     // 实际的路径转换 @ -> src
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
+      "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
   },
   // 自定义主题：2. 配置ElementPlus自动导入
@@ -42,7 +42,7 @@ export default defineConfig({
         additionalData: `
           @use "@/styles/element/index.scss" as *;
         `,
-      }
-    }
-  }
-})
+      },
+    },
+  },
+});
