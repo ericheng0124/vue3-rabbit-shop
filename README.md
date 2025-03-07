@@ -379,3 +379,90 @@ const router = createRouter({
 export default router
 
 ```
+
+**配置二级路由**
+在views目录下新建2个二级路由页面文件夹Home和Category
+分别在创建2个二级路由页面
+```
+<!-- Home/index.vue -->
+<template>
+  <div>
+    我是Home页
+  </div>
+</template>
+
+<!-- Category/index.vue -->
+<template>
+  <div>
+    我是分类页
+  </div>
+</template>
+```
+
+在router/index.js中配置二级路由
+
+```
+// createRouter: 创建路由实例
+// createWebHistory: 创建history模式路由
+// import.meta.env.BASE_URL: 项目的基础路径
+// children: 子路由
+
+import { createRouter, createWebHistory } from 'vue-router'
+import Layout from '@/views/Layout/index.vue'
+import Login from '@/views/Login/index.vue'
+import Home from '@/views/Home/index.vue'
+import Category from '@/views/Category/index.vue'
+
+const router = createRouter({
+  history: createWebHistory(import.meta.env.BASE_URL),
+  // path和components对应关系的位置
+  routes: [
+    {
+      path:'/',
+      component: Layout,
+      // children：子路由属性
+      children:[
+        {
+          // path设置为空，表示默认子路由
+          path:'',
+          component: Home
+        },
+        {
+          path:'/category',
+          component: Category
+        }
+      ]
+    },
+    {
+      path:'/login',
+      component: Login,
+    }
+  ],
+})
+
+export default router
+
+```
+
+### 7 静态资源引入
+
+**图片资源和样式资源**
+资源说明
+  1. 实际工作中的图片资源通常由UI设计师提供，常见的图片格式有png，svg等都是由UI切图交给前端
+  2. 样式资源通常是指项目初始化的时候进行样式重置，常见的比如开源的 normalize.css或者手写
+
+资源操作
+  1. 图片资源-把 images 文件夹放到 assets 目录下
+  2. 样式资源-把common.scss 文件放到 styles 目录下
+
+将项目准备的静态资源按照对应文件类型分别拷贝至响应的目录下
+拷贝完之后将样式文件，在项目入口文件处main.js中引入使用
+```
+// 引入初始化样式
+import '@/styles/common.scss'
+```
+再次重启项目让样式生效
+
+### 8 安装error lens
+error lens是一个实时提供错误警告信息的VScode插件，方便开发
+
