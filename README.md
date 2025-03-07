@@ -309,3 +309,73 @@ httpInstance.interceptors.response.use(response => {
 
 export default httpInstance
 ```
+
+### 5. 解决eslint命名规则错误提示
+在eslint.config.js文件中添加修改命名规则检测
+```
+require('@rushstack/eslint-patch/modern-module-resolution')
+
+Mudule.exports = {
+	root:ture,
+	'extends':[
+		'plugin:vue/vue3-essential',
+		'eslint:recommended',
+		'@vue/eslint-config-typescript',
+	],
+	parserOptions:{
+		ecmaVersion:'latest',
+	},
+	rules:{
+		'vue/multi-word-commponent-names':0,  // 不在强制要求组件命名
+	},
+}
+```
+
+### 6 router路由设置
+在views文件夹中新建2个页面组件src/views/Layout/index.vue和src/views/Login/index.vue
+创建基础模板
+```
+<!-- 首页组件 -->
+<template>
+  <div>
+    <h1>我是首页</h1>
+  </div>
+</template>
+
+<!-- 登录页组件 -->
+<template>
+  <div>
+    <h1>我是登陆页</h1>
+  </div>
+</template>
+```
+
+**找到router文件夹，修改index.js文件，创建2个一级路由**
+```
+// createRouter: 创建路由实例
+// createWebHistory: 创建history模式路由
+// import.meta.env.BASE_URL: 项目的基础路径
+
+import { createRouter, createWebHistory } from 'vue-router'
+import Layout from '@/views/Layout/index.vue'
+import Login from '@/views/Login/index.vue'
+
+
+const router = createRouter({
+  history: createWebHistory(import.meta.env.BASE_URL),
+  // path和components对应关系的位置
+  routes: [
+    {
+      path:'/',
+      component: Layout,
+    },
+    {
+      path:'/login',
+      component: Login,
+    }
+  ],
+})
+
+export default router
+
+```
