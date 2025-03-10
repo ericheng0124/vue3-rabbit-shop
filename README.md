@@ -974,3 +974,41 @@ import layoutFooter from './components/layoutFooter.vue'
 ```
 <link rel="stylesheet" href="//at.alicdn.com/t/font_2143783_iq6z4ey5vu.css">
 ```
+
+### 12 Layout页面
+1. 渲染一级导航列表
+查看项目api文档，找到首页页面-获取分类
+在src/apis下新建layout.js文件
+```
+import httpInstance from "@/utils/http"
+
+// 获取分类列表
+export const getCategoryAPI = ()=>{
+  return httpInstance({
+    url:'/home/category/head'
+  })
+}
+
+```
+
+在layoutHeader组件中引入，并发起请求
+```
+<script setup>
+import {getCategoryAPI} from '@/apis/layout'
+import { onMounted,ref } from 'vue'
+
+const categoryList = ref([])
+
+// 获取分类列表
+const getCategory = async()=>{
+  const res = await getCategoryAPI()
+  console.log(res)
+  categoryList.value = res.result
+}
+
+onMounted(()=>{
+  getCategory()
+})
+
+</script>
+```
