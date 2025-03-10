@@ -1204,3 +1204,196 @@ export const useCategoryStore = defineStore("category", () => {
 })
 ```
 
+### 13 Home页面
+#### 13.1整体结构拆分
+![image](https://cdn.nlark.com/yuque/0/2023/png/274425/1675417667651-eb841c73-5b36-48a5-a8ee-118dbeaaeb0d.png#averageHue=%23fcf8f8&clientId=u19c1ce9d-cad7-4&from=paste&height=458&id=u7e2d2595&name=image.png&originHeight=916&originWidth=1368&originalType=binary&ratio=1&rotation=0&showTitle=false&size=37531&status=done&style=none&taskId=uf8f39479-333b-4074-b888-53dc829c807&title=&width=684)
+
+按照图示结构需要创建5个子组件，遵循就近原则，在Home目录下新建components目录，分别创建5个子组件
+- HomeCategory.vue
+- HomeBanner.vue
+- HomeNew.vue
+- HomeHot.vue
+- HomeProduct.vue
+
+在Home组件中按照图示结构引入创建的5个子组件
+```js
+<script setup>
+import HomeCategory from './components/HomeCategory.vue'
+import HomeBanner from './components/HomeBanner.vue'
+import HomeHot from './components/HomeHot.vue'
+import HomeNew from './components/HomeNew.vue'
+import HomeProduct from './components/HomeProduct.vue'
+</script>
+
+<template>
+  <div class="container">
+    <HomeCategory />
+    <HomeBanner />
+  </div>
+  <HomeNew />
+  <HomeHot />
+  <HomeProduct />
+</template>
+```
+
+#### 13.2 分类子组件实现
+```js
+<script setup>
+import { useCategoryStore } from '@/stores/category'
+
+const categoryStore = useCategoryStore()
+</script>
+
+<template>
+  <div class="home-category">
+    <ul class="menu">
+      <li v-for="item in categoryStore.categoryList" :key="item.id">
+        <RouterLink to="/">{{item.name}}</RouterLink>
+        <!-- 取数据子结构的前2项 -->
+        <RouterLink v-for="i in item.children.slice(0,2)" :key="i.id" to="/">{{i.name}}</RouterLink>
+        <!-- 弹层layer位置 -->
+        <div class="layer">
+          <h4>分类推荐 <small>根据您的购买或浏览记录推荐</small></h4>
+          <ul>
+            <li v-for="i in item.goods" :key="i.id">
+              <RouterLink to="/">
+                <img alt="" :src="i.picture"/>
+                <div class="info">
+                  <p class="name ellipsis-2">
+                    {{i.name}}
+                  </p>
+                  <p class="desc ellipsis">{{i.desc}}</p>
+                  <p class="price"><i>¥</i>{{i.price}}</p>
+                </div>
+              </RouterLink>
+            </li>
+          </ul>
+        </div>
+      </li>
+    </ul>
+  </div>
+</template>
+
+
+<style scoped lang='scss'>
+.home-category {
+  width: 250px;
+  height: 500px;
+  background: rgba(0, 0, 0, 0.8);
+  position: relative;
+  z-index: 99;
+
+  .menu {
+    li {
+      padding-left: 40px;
+      height: 55px;
+      line-height: 55px;
+
+      &:hover {
+        background: $xtxColor;
+      }
+
+      a {
+        margin-right: 4px;
+        color: #fff;
+
+        &:first-child {
+          font-size: 16px;
+        }
+      }
+
+      .layer {
+        width: 990px;
+        height: 500px;
+        background: rgba(255, 255, 255, 0.8);
+        position: absolute;
+        left: 250px;
+        top: 0;
+        display: none;
+        padding: 0 15px;
+
+        h4 {
+          font-size: 20px;
+          font-weight: normal;
+          line-height: 80px;
+
+          small {
+            font-size: 16px;
+            color: #666;
+          }
+        }
+
+        ul {
+          display: flex;
+          flex-wrap: wrap;
+
+          li {
+            width: 310px;
+            height: 120px;
+            margin-right: 15px;
+            margin-bottom: 15px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            background: #fff;
+
+            &:nth-child(3n) {
+              margin-right: 0;
+            }
+
+            a {
+              display: flex;
+              width: 100%;
+              height: 100%;
+              align-items: center;
+              padding: 10px;
+
+              &:hover {
+                background: #e3f9f4;
+              }
+
+              img {
+                width: 95px;
+                height: 95px;
+              }
+
+              .info {
+                padding-left: 10px;
+                line-height: 24px;
+                overflow: hidden;
+
+                .name {
+                  font-size: 16px;
+                  color: #666;
+                }
+
+                .desc {
+                  color: #999;
+                }
+
+                .price {
+                  font-size: 22px;
+                  color: $priceColor;
+
+                  i {
+                    font-size: 16px;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
+      // 关键样式  hover状态下的layer盒子变成block
+      &:hover {
+        .layer {
+          display: block;
+        }
+      }
+    }
+  }
+}
+</style>
+```
+
+
