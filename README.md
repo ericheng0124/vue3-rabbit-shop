@@ -2,7 +2,7 @@
 
 ### 1.项目初始化
 
-```
+```cmd
 npm init vue@latest
 ```
 
@@ -13,13 +13,13 @@ npm init vue@latest
 
 **`因为是vue3的项目，所以这里nodejs环境需要使用node-js 18版本以上的node-js`**
 
-```
+```cmd
 nvm use 18
 ```
 
 项目初始化配置安装，初始化依赖安装
 
-```
+```cmd
 npm install
 ```
 
@@ -32,7 +32,7 @@ src -|- apis
 
 配置 git
 
-```
+```cmd
 git init 	// 初始化项目目录
 git add .    // 将初始化的文件夹内容添加到暂存区
 git commit -m 'init commit' 	// 初始化提交到版本区
@@ -51,7 +51,7 @@ git push origin dev		// 将本地dev推送到远端dev
 
 #### 2.2 添加 json 格式的配置项
 
-```
+```json
 {
   "compilerOptions":{
     "baseUrl":"./",
@@ -68,7 +68,7 @@ git push origin dev		// 将本地dev推送到远端dev
 
 改配置项只做联想路径提示，实际做路径转换的位置是 vite.config.js 中。
 
-```
+```js
 import { fileURLToPath, URL } from 'node:url'
 
 import { defineConfig } from 'vite'
@@ -94,7 +94,7 @@ export default defineConfig({
 
 #### 3.1 安装 ElementPlus
 
-```
+```cmd
 # NPM
 $ npm install element-plus --save
 
@@ -109,13 +109,13 @@ $ pnpm install element-plus
 
 根据官方文档配置按需导入，需要安装对应插件
 
-```
+```cmd
 npm install -D unplugin-vue-components unplugin-auto-import
 ```
 
 安装完毕之后，需要对 vite.config.js 进行配置插件
 
-```
+```js
 import { fileURLToPath, URL } from 'node:url'
 
 import { defineConfig } from 'vite'
@@ -158,7 +158,7 @@ export default defineConfig({
 
 ##### 3.3.1 安装 sass
 
-```
+```cmd
 npm i sass -D
 ```
 
@@ -167,7 +167,7 @@ npm i sass -D
 在 src/style/index.scss，内编辑项目的样式。
 一下是官方文档说明：
 
-```
+```scss
 // styles/element/index.scss
 /* 只需要重写你需要的即可 */
 @forward 'element-plus/theme-chalk/src/common/var.scss' with (
@@ -185,7 +185,7 @@ npm i sass -D
 
 该项目的配置文件如下：
 
-```
+```scss
 /* 只需要重写你需要的即可 */
 @forward 'element-plus/theme-chalk/src/common/var.scss' with (
   $colors: (
@@ -219,7 +219,7 @@ npm i sass -D
 
 对 vite.config.js 文件进行配置修改如下：
 
-```
+```js
 import { fileURLToPath, URL } from 'node:url'
 
 import { defineConfig } from 'vite'
@@ -275,7 +275,7 @@ export default defineConfig({
 
 #### 4.1 安装 axios
 
-```
+```cmd
 npm install axios
 ```
 
@@ -288,7 +288,7 @@ npm install axios
 3. 配置请求拦截器和响应拦截器
 4. 导出创建的 axios 实例对象
 
-```
+```js
 // axios基础的封装
 import axios from "axios"
 
@@ -327,7 +327,7 @@ export default httpInstance
 
 在 eslint.config.js 文件中添加修改命名规则检测
 
-```
+```js
 require('@rushstack/eslint-patch/modern-module-resolution')
 
 Mudule.exports = {
@@ -351,7 +351,7 @@ Mudule.exports = {
 在 views 文件夹中新建 2 个页面组件 src/views/Layout/index.vue 和 src/views/Login/index.vue
 创建基础模板
 
-```
+```js
 <!-- 首页组件 -->
 <template>
   <div>
@@ -369,7 +369,7 @@ Mudule.exports = {
 
 **找到 router 文件夹，修改 index.js 文件，创建 2 个一级路由**
 
-```
+```js
 // createRouter: 创建路由实例
 // createWebHistory: 创建history模式路由
 // import.meta.env.BASE_URL: 项目的基础路径
@@ -402,7 +402,7 @@ export default router
 在 views 目录下新建 2 个二级路由页面文件夹 Home 和 Category
 分别在创建 2 个二级路由页面
 
-```
+```js
 <!-- Home/index.vue -->
 <template>
   <div>
@@ -420,7 +420,7 @@ export default router
 
 在 router/index.js 中配置二级路由
 
-```
+```js
 // createRouter: 创建路由实例
 // createWebHistory: 创建history模式路由
 // import.meta.env.BASE_URL: 项目的基础路径
@@ -479,7 +479,7 @@ export default router
 将项目准备的静态资源按照对应文件类型分别拷贝至响应的目录下
 拷贝完之后将样式文件，在项目入口文件处 main.js 中引入使用
 
-```
+```js
 // 引入初始化样式
 import '@/styles/common.scss'
 ```
@@ -497,7 +497,7 @@ error lens 是一个实时提供错误警告信息的 VScode 插件，方便开�
 1.  新增一个 var.scss 文件，存入色值变量
 2.  通过 vite.config.js 配置自动导入文件
 
-```
+```js
 css: {
   preprocessorOptions: {
     scss: {
@@ -512,8 +512,9 @@ css: {
 ```
 
 ### 10 Layout组件结构快速搭建
-src/Layout/components/layoutNav.vue
-```
+src/Layout/components/LayoutNav.vue
+
+```js
 <script setup>
 
 </script>
@@ -581,8 +582,9 @@ src/Layout/components/layoutNav.vue
 </style>
 ```
 
-src/Layout/components/layoutHeader.vue
-```
+src/Layout/components/LayoutHeader.vue
+
+```js
 <script setup>
 
 </script>
@@ -716,8 +718,9 @@ src/Layout/components/layoutHeader.vue
 </style>
 ```
 
-src/Layout/components/layoutFooter.vue
-```
+src/Layout/components/LayoutFooter.vue
+
+```js
 <template>
   <footer class="app_footer">
     <!-- 联系我们 -->
@@ -949,21 +952,21 @@ src/Layout/components/layoutFooter.vue
 ```
 
 src/layout/index.vue
-```
-<script setup>
-import layoutNav from './components/layoutNav.vue'
-import layoutHeader from './components/layoutHeader.vue'
-import layoutFooter from './components/layoutFooter.vue'
 
+```js
+<script setup>
+import LayoutNav from './components/LayoutNav.vue'
+import LayoutHeader from './components/LayoutHeader.vue'
+import LayoutFooter from './components/LayoutFooter.vue'
 </script>
 
 <template>
   <div>
-    <layout-nav />
-    <layout-header />
+    <LayoutNav />
+    <LayoutHeader /> 
     <!-- 二级路由出口 -->
     <router-view></router-view>
-    <layout-footer />
+    <LayoutFooter />
   </div>
 </template>
 ```
@@ -976,8 +979,8 @@ import layoutFooter from './components/layoutFooter.vue'
 ```
 
 ### 12 Layout页面
-1. 渲染一级导航列表
-查看项目api文档，找到首页页面-获取分类
+#### 12.1 渲染一级导航列表
+查看项目api文档，找到首页页面-获取分类（https://apifox.cn/apidoc/shared-fa9274ac-362e-4905-806b-6135df6aa90e/api-24945669）
 在src/apis下新建layout.js文件
 ```
 import httpInstance from "@/utils/http"
@@ -992,7 +995,8 @@ export const getCategoryAPI = ()=>{
 ```
 
 在layoutHeader组件中引入，并发起请求
-```
+
+```js
 <script setup>
 import {getCategoryAPI} from '@/apis/layout'
 import { onMounted,ref } from 'vue'
@@ -1012,3 +1016,191 @@ onMounted(()=>{
 
 </script>
 ```
+
+#### 12.2 吸顶导航交互实现
+新建src/Layout/components/LayoutFixed.vue
+静态页面结构
+
+```js
+<template>
+  <div class="app-header-sticky">
+    <div class="container">
+      <RouterLink class="logo" to="/" />
+      <!-- 导航区域 -->
+      <ul class="app-header-nav">
+        <li class="home">
+          <RouterLink to="/">首页</RouterLink>
+        </li>
+        <li>
+          <RouterLink to="/">居家</RouterLink>
+        </li>
+        <li>
+          <RouterLink to="/">美食</RouterLink>
+        </li>
+        <li>
+          <RouterLink to="/">服饰</RouterLink>
+        </li>
+        <li>
+          <RouterLink to="/">母婴</RouterLink>
+        </li>
+        <li>
+          <RouterLink to="/">个护</RouterLink>
+        </li>
+        <li>
+          <RouterLink to="/">严选</RouterLink>
+        </li>
+        <li>
+          <RouterLink to="/">数码</RouterLink>
+        </li>
+        <li>
+          <RouterLink to="/">运动</RouterLink>
+        </li>
+        <li>
+          <RouterLink to="/">杂项</RouterLink>
+        </li>
+      </ul>
+
+      <div class="right">
+        <RouterLink to="/">品牌</RouterLink>
+        <RouterLink to="/">专题</RouterLink>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped lang="scss">
+.app-header-sticky {
+  width: 100%;
+  height: 80px;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 999;
+  background-color: #fff;
+  border-bottom: 1px solid #e4e4e4;
+  // 此处为关键样式!!!
+  // 状态一：往上平移自身高度 + 完全透明
+  transform: translateY(-100%);
+  opacity: 0;
+
+  // 状态二：移除平移 + 完全不透明
+  &.show {
+    transition: all 0.3s linear;
+    transform: none;
+    opacity: 1;
+  }
+
+  .container {
+    display: flex;
+    align-items: center;
+  }
+
+  .logo {
+    width: 200px;
+    height: 80px;
+    background: url("@/assets/images/logo.png") no-repeat right 2px;
+    background-size: 160px auto;
+  }
+
+  .right {
+    width: 220px;
+    display: flex;
+    text-align: center;
+    padding-left: 40px;
+    border-left: 2px solid $xtxColor;
+
+    a {
+      width: 38px;
+      margin-right: 40px;
+      font-size: 16px;
+      line-height: 1;
+
+      &:hover {
+        color: $xtxColor;
+      }
+    }
+  }
+}
+
+.app-header-nav {
+  width: 820px;
+  display: flex;
+  padding-left: 40px;
+  position: relative;
+  z-index: 998;
+
+  li {
+    margin-right: 40px;
+    width: 38px;
+    text-align: center;
+
+    a {
+      font-size: 16px;
+      line-height: 32px;
+      height: 32px;
+      display: inline-block;
+
+      &:hover {
+        color: $xtxColor;
+        border-bottom: 1px solid $xtxColor;
+      }
+    }
+
+    .active {
+      color: $xtxColor;
+      border-bottom: 1px solid $xtxColor;
+    }
+  }
+}
+</style>
+```
+
+根据静态结构可以看到是通过在跟标签<div class="app-header-sticky show">内添加一个show的class类完成控制显示和隐藏的
+这里使用vueUse插件完成获取滚轴在y轴上的高度来控制
+首先安装vueUse插件
+
+```cmd
+npm i @vueuse/core
+```
+
+之后使用`useScroll()`函数获取y轴数值，给对应容器标签添加一个动态类条件为当y值大于78px的时候触发
+
+```js
+<script setup>
+// vueUse
+import { useScroll } from '@vueuse/core'
+const { y } = useScroll(window)
+</script>
+
+<template>
+  <div class="app-header-sticky" :class="{ show: y > 78 }">
+  // .... 内容不变
+<template />
+```
+
+#### 12.3 使用pinia优化重复请求
+
+因为LayoutHeader组件和LayoutFixed组件中会重复发起获取category列表的请求。
+
+所以这里使用pinia优化重复请求的问题，对列表数据进行统一管理，在需要使用的组件中下发使用即可。
+
+在src/stores目录下新建category.js模块。
+
+```js
+import { ref, computed } from "vue"
+import { defineStore } from "pinia"
+import { getCategoryAPI } from "@/apis/layout"
+
+export const useCategoryStore = defineStore("category", () => {
+  // 导航列表逻辑
+  // state导航数据列表
+  const categoryList = ref([])
+  // action获取分类
+  const getCategory = async () => {
+    const res = await getCategoryAPI()
+    categoryList.value = res.result
+  }
+  return { categoryList, getCategory }
+})
+```
+
