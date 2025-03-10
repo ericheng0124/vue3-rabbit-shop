@@ -967,3 +967,10 @@ import layoutFooter from './components/layoutFooter.vue'
   </div>
 </template>
 ```
+
+### 11 字体图标渲染
+引入阿里的字体图标库
+在根目录下的index.html文件的<head>标签内引入阿里字体图标库即可
+```
+<link rel="stylesheet" href="//at.alicdn.com/t/font_2143783_iq6z4ey5vu.css">
+```
