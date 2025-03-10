@@ -1,33 +1,37 @@
 # 小兔鲜商场项目
 
-
-
 ### 1.项目初始化
+
 ```
 npm init vue@latest
 ```
-项目名称：vue-rabbit
-确认安装router，pinia，eslint检查
 
-待vite安装完成之后，使用代码工具软件打开项目目录
+项目名称：vue-rabbit
+确认安装 router，pinia，eslint 检查
+
+待 vite 安装完成之后，使用代码工具软件打开项目目录
 
 **`因为是vue3的项目，所以这里nodejs环境需要使用node-js 18版本以上的node-js`**
+
 ```
 nvm use 18
 ```
+
 项目初始化配置安装，初始化依赖安装
+
 ```
 npm install
 ```
+
 新建项目所需的文件夹
 src -|- apis
-       |- composables
-       |- directives
-       |- styles
-       |- utils
+|- composables
+|- directives
+|- styles
+|- utils
 
+配置 git
 
-配置git
 ```
 git init 	// 初始化项目目录
 git add .    // 将初始化的文件夹内容添加到暂存区
@@ -39,16 +43,14 @@ git checkout -b dev		// 创建并切换到分支dev
 git push origin dev		// 将本地dev推送到远端dev
 ```
 
-
-
 ### 2.项目起步-配置别名路径联想提示
 
 #### 2.1 新建配置文件
+
 在项目根路径下新增 `jsconfig.json` 文件
 
+#### 2.2 添加 json 格式的配置项
 
-
-#### 2.2 添加json格式的配置项
 ```
 {
   "compilerOptions":{
@@ -61,9 +63,11 @@ git push origin dev		// 将本地dev推送到远端dev
   }
 }
 ```
-如果使用的是最新的vite创建的项目，则可以忽略，vite最新版的已经帮我们创建了，可以在vite.config.js下的jsconfig.json中查看配置详情
 
-改配置项只做联想路径提示，实际做路径转换的位置是vite.config.js中。
+如果使用的是最新的 vite 创建的项目，则可以忽略，vite 最新版的已经帮我们创建了，可以在 vite.config.js 下的 jsconfig.json 中查看配置详情
+
+改配置项只做联想路径提示，实际做路径转换的位置是 vite.config.js 中。
+
 ```
 import { fileURLToPath, URL } from 'node:url'
 
@@ -86,11 +90,10 @@ export default defineConfig({
 })
 ```
 
+### 3.引入 ElementPlus
 
+#### 3.1 安装 ElementPlus
 
-### 3.引入ElementPlus
-
-#### 3.1 安装ElementPlus
 ```
 # NPM
 $ npm install element-plus --save
@@ -103,11 +106,15 @@ $ pnpm install element-plus
 ```
 
 #### 3.2 配置按需导入
+
 根据官方文档配置按需导入，需要安装对应插件
+
 ```
 npm install -D unplugin-vue-components unplugin-auto-import
 ```
-安装完毕之后，需要对vite.config.js进行配置插件
+
+安装完毕之后，需要对 vite.config.js 进行配置插件
+
 ```
 import { fileURLToPath, URL } from 'node:url'
 
@@ -142,23 +149,24 @@ export default defineConfig({
 })
 
 ```
-***这里注意配置完之后需要重新启动一下项目，确保配置生效***
 
+**_这里注意配置完之后需要重新启动一下项目，确保配置生效_**
 
-
-
-#### 3.3 ElementPlus主题定制
+#### 3.3 ElementPlus 主题定制
 
 `如何项目的主题色与ElementPlus主题色存在冲突，可以通过定制主题让ElementPlus的主题色和项目保持一致。`
 
-##### 3.3.1 安装sass
+##### 3.3.1 安装 sass
+
 ```
 npm i sass -D
 ```
 
 ##### 3.3.2 设置定制化的样式文件
-在src/style/index.scss，内编辑项目的样式。
+
+在 src/style/index.scss，内编辑项目的样式。
 一下是官方文档说明：
+
 ```
 // styles/element/index.scss
 /* 只需要重写你需要的即可 */
@@ -174,7 +182,9 @@ npm i sass -D
 // 如果你想导入所有样式:
 // @use "element-plus/theme-chalk/src/index.scss" as *;
 ```
+
 该项目的配置文件如下：
+
 ```
 /* 只需要重写你需要的即可 */
 @forward 'element-plus/theme-chalk/src/common/var.scss' with (
@@ -202,12 +212,13 @@ npm i sass -D
   )
 )
 ```
-##### 3.3.3 配置自动导入
-这里自动导入需要深入到ElementPlus的组件中，按照官方配置文档来。
-    1. 配置ElementPlus采用sass样式配色系统
-    2. 自动导入定制化样式文件进行样式覆盖
 
-对vite.config.js文件进行配置修改如下：
+##### 3.3.3 配置自动导入
+
+这里自动导入需要深入到 ElementPlus 的组件中，按照官方配置文档来。 1. 配置 ElementPlus 采用 sass 样式配色系统 2. 自动导入定制化样式文件进行样式覆盖
+
+对 vite.config.js 文件进行配置修改如下：
+
 ```
 import { fileURLToPath, URL } from 'node:url'
 
@@ -260,21 +271,23 @@ export default defineConfig({
 
 ```
 
-### 4. axios基础配置
+### 4. axios 基础配置
 
-#### 4.1 安装axios
+#### 4.1 安装 axios
+
 ```
 npm install axios
 ```
 
-#### 4.2 配置axios的基础封装
+#### 4.2 配置 axios 的基础封装
 
-在`src/utils/`路径下创建http.js文件
+在`src/utils/`路径下创建 http.js 文件
 
-  1. 引入axios
-  2. 创建axios实例对象：添加项目基础地址和超时时间
-  3. 配置请求拦截器和响应拦截器
-  4. 导出创建的axios实例对象
+1. 引入 axios
+2. 创建 axios 实例对象：添加项目基础地址和超时时间
+3. 配置请求拦截器和响应拦截器
+4. 导出创建的 axios 实例对象
+
 ```
 // axios基础的封装
 import axios from "axios"
@@ -310,8 +323,10 @@ httpInstance.interceptors.response.use(response => {
 export default httpInstance
 ```
 
-### 5. 解决eslint命名规则错误提示
-在eslint.config.js文件中添加修改命名规则检测
+### 5. 解决 eslint 命名规则错误提示
+
+在 eslint.config.js 文件中添加修改命名规则检测
+
 ```
 require('@rushstack/eslint-patch/modern-module-resolution')
 
@@ -331,9 +346,11 @@ Mudule.exports = {
 }
 ```
 
-### 6 router路由设置
-在views文件夹中新建2个页面组件src/views/Layout/index.vue和src/views/Login/index.vue
+### 6 router 路由设置
+
+在 views 文件夹中新建 2 个页面组件 src/views/Layout/index.vue 和 src/views/Login/index.vue
 创建基础模板
+
 ```
 <!-- 首页组件 -->
 <template>
@@ -350,7 +367,8 @@ Mudule.exports = {
 </template>
 ```
 
-**找到router文件夹，修改index.js文件，创建2个一级路由**
+**找到 router 文件夹，修改 index.js 文件，创建 2 个一级路由**
+
 ```
 // createRouter: 创建路由实例
 // createWebHistory: 创建history模式路由
@@ -381,8 +399,9 @@ export default router
 ```
 
 **配置二级路由**
-在views目录下新建2个二级路由页面文件夹Home和Category
-分别在创建2个二级路由页面
+在 views 目录下新建 2 个二级路由页面文件夹 Home 和 Category
+分别在创建 2 个二级路由页面
+
 ```
 <!-- Home/index.vue -->
 <template>
@@ -399,7 +418,7 @@ export default router
 </template>
 ```
 
-在router/index.js中配置二级路由
+在 router/index.js 中配置二级路由
 
 ```
 // createRouter: 创建路由实例
@@ -448,21 +467,46 @@ export default router
 
 **图片资源和样式资源**
 资源说明
-  1. 实际工作中的图片资源通常由UI设计师提供，常见的图片格式有png，svg等都是由UI切图交给前端
-  2. 样式资源通常是指项目初始化的时候进行样式重置，常见的比如开源的 normalize.css或者手写
+
+1. 实际工作中的图片资源通常由 UI 设计师提供，常见的图片格式有 png，svg 等都是由 UI 切图交给前端
+2. 样式资源通常是指项目初始化的时候进行样式重置，常见的比如开源的 normalize.css 或者手写
 
 资源操作
-  1. 图片资源-把 images 文件夹放到 assets 目录下
-  2. 样式资源-把common.scss 文件放到 styles 目录下
+
+1. 图片资源-把 images 文件夹放到 assets 目录下
+2. 样式资源-把 common.scss 文件放到 styles 目录下
 
 将项目准备的静态资源按照对应文件类型分别拷贝至响应的目录下
-拷贝完之后将样式文件，在项目入口文件处main.js中引入使用
+拷贝完之后将样式文件，在项目入口文件处 main.js 中引入使用
+
 ```
 // 引入初始化样式
 import '@/styles/common.scss'
 ```
+
 再次重启项目让样式生效
 
-### 8 安装error lens
-error lens是一个实时提供错误警告信息的VScode插件，方便开发
+### 8 安装 error lens
 
+error lens 是一个实时提供错误警告信息的 VScode 插件，方便开发
+
+### 9 SCSS文件自动导入
+
+在项目中一些组件共享的色值会以 scss 变量的方式统一放到一个名为 var.scss 的文件中，正常组件中使用，需要先导入 scss 文件，再使用内部变量，比较繁琐，自动导入可以免去手动导入步骤，直接使用内部变量。
+
+1.  新增一个 var.scss 文件，存入色值变量
+2.  通过 vite.config.js 配置自动导入文件
+
+```
+css: {
+  preprocessorOptions: {
+    scss: {
+      // 自动导入定制化样式文件进行样式覆盖
+      additionalData: `
+        @use "@/styles/element/index.scss" as *;
+        @use "@/styles/var.scss" as *;  // 自动导入scss文件
+      `,
+    },
+  },
+},
+```
