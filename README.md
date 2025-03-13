@@ -2379,3 +2379,81 @@ onMounted(()=>{
 
 // ... 以下代码不变
 ```
+
+#### 14.2 激活状态显示
+
+src/views/Layou/components/LayoutHeader.vue
+给他RouteLink标签添加active-class属性，并设置对应的选中之后的样式
+```js
+<template>
+  <header class='app-header'>
+    <div class="container">
+      <h1 class="logo">
+        <RouterLink to="/">小兔鲜</RouterLink>
+      </h1>
+      <ul class="app-header-nav">
+        <li class="home" v-for="item in categoryStore.categoryList" :key="item.id">
+          <RouterLink active-class="active" :to="`/category/${item.id}`">{{item.name}}</RouterLink>
+        </li>
+      </ul>
+      <div class="search">
+        <i class="iconfont icon-search"></i>
+        <input type="text" placeholder="搜一搜">
+      </div>
+      <!-- 头部购物车 -->
+      
+    </div>
+  </header>
+</template>
+```
+
+#### 14.3 分类列表渲染
+
+src/views/Category/index.vue
+```js
+<template>
+  <div class="top-category">
+    <div class="container m-top-20">
+      <!-- 面包屑 -->
+      <div class="bread-container">
+        <el-breadcrumb separator=">">
+          <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+          <el-breadcrumb-item>{{ categoryData.name }}</el-breadcrumb-item>
+        </el-breadcrumb>
+      </div>
+      <!-- 轮播图 -->
+      <div class="home-banner">
+        <el-carousel height="500px" :interval="3000">
+          <el-carousel-item v-for="item in bannerList" :key="item.id">
+            <img :src="item.imgUrl" alt="" />
+          </el-carousel-item>
+        </el-carousel>
+      </div>
+      <!-- 分类列表渲染 -->
+      <div class="sub-list">
+        <h3>全部分类</h3>
+        <ul>
+          <li v-for="i in categoryData.children" :key="i.id">
+            <RouterLink to="/">
+              <img :src="i.picture" />
+              <p>{{ i.name }}</p>
+            </RouterLink>
+          </li>
+        </ul>
+      </div>
+      <div
+        class="ref-goods"
+        v-for="item in categoryData.children"
+        :key="item.id"
+      >
+        <div class="head">
+          <h3>- {{ item.name }}-</h3>
+        </div>
+        <div class="body">
+          <GoodsItem v-for="good in item.goods" :goods="good" :key="good.id" />
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+```
