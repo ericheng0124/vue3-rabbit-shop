@@ -1882,12 +1882,12 @@ import HomePanel from './HomePanel.vue'
           </strong>
         </RouterLink>
         <ul class="goods-list">
-          <li v-for="good in cate.goods" :key="good.id">
+          <li v-for="goods in cate.goods" :key="goods.id">
             <RouterLink to="/" class="goods-item">
-              <img v-img-lazy="good.picture" alt="" />
-              <p class="name ellipsis">{{ good.name }}</p>
-              <p class="desc ellipsis">{{ good.desc }}</p>
-              <p class="price">&yen;{{ good.price }}</p>
+              <img v-img-lazy="goods.picture" alt="" />
+              <p class="name ellipsis">{{ goods.name }}</p>
+              <p class="desc ellipsis">{{ goods.desc }}</p>
+              <p class="price">&yen;{{ goods.price }}</p>
             </RouterLink>
           </li>
         </ul>
@@ -2056,4 +2056,99 @@ onMounted(()=>{
 </script>
 
 // ... 以下代码不变
+```
+
+#### 13.10 封装GoodsItem组件
+根据项目发现产品图块结构多次使用，这里封装为一个组件,使用props传参方式抽象
+src/views/Home/components/GoodsItem
+```js
+<script setup>
+defineProps({
+  goods: {
+    type: Object,
+    default: () => {},
+  },
+});
+</script>
+
+<template>
+  <RouterLink to="/" class="goods-item">
+    <img v-img-lazy="goods.picture" alt="" />
+    <p class="name ellipsis">{{ goods.name }}</p>
+    <p class="desc ellipsis">{{ goods.desc }}</p>
+    <p class="price">&yen;{{ goods.price }}</p>
+  </RouterLink>
+</template>
+
+<style lang="scss" scoped>
+.goods-item {
+  display: block;
+  width: 220px;
+  padding: 20px 30px;
+  text-align: center;
+  transition: all 0.5s;
+
+  &:hover {
+    transform: translate3d(0, -3px, 0);
+    box-shadow: 0 3px 8px rgb(0 0 0 / 20%);
+  }
+
+  img {
+    width: 160px;
+    height: 160px;
+  }
+
+  p {
+    padding-top: 10px;
+  }
+
+  .name {
+    font-size: 16px;
+  }
+
+  .desc {
+    color: #999;
+    height: 29px;
+  }
+
+  .price {
+    color: $priceColor;
+    font-size: 20px;
+  }
+}
+</style>
+
+```
+
+在HomeProduct中传入props实现
+```js
+<script setup>
+// ... 以上代码不变
+
+import GoodsItem from './GoodsItem.vue'
+
+</script>
+
+<template>
+  <div class="home-product">
+    <HomePanel :title="cate.name" v-for="cate in goodsProduct" :key="cate.id">
+      <div class="box">
+        <RouterLink class="cover" to="/">
+          <img v-img-lazy="cate.picture" />
+          <strong class="label">
+            <span>{{ cate.name }}馆</span>
+            <span>{{ cate.saleInfo }}</span>
+          </strong>
+        </RouterLink>
+        <ul class="goods-list">
+          <li v-for="goods in cate.goods" :key="goods.id">
+            <GoodsItem :goods="goods"/>
+          </li>
+        </ul>
+      </div>
+    </HomePanel>
+  </div>
+</template>
+
+// ...以下代码不变
 ```
