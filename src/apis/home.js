@@ -6,3 +6,11 @@ export const getBannerAPI = ()=>{
     url:'/home/banner'
   })
 }
+
+
+// 获取新鲜好物请求
+export const findNewAPI = ()=>{
+  return httpInstance({
+    url:'/home/new'
+  })
+}
