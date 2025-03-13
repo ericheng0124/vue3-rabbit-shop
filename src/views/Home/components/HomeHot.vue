@@ -35,11 +35,11 @@ onMounted(() => {
   justify-content: space-between;
   height: 426px;
 
-
   li {
     width: 306px;
     height: 406px;
     transition: all 0.5s;
+    
 
     &:hover {
       transform: translate3d(0, -3px, 0);
