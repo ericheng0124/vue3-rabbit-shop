@@ -1653,7 +1653,7 @@ src/apis/home.js
 // ... 上面数据不变
 
 // 获取新鲜好物请求
-export const findNewAPI = ()=>{
+export const getNewAPI = ()=>{
   return httpInstance({
     url:'/home/new'
   })
@@ -1664,7 +1664,7 @@ export const findNewAPI = ()=>{
 ```js
 <script setup>
 import HomePanel from './HomePanel.vue'
-import {findNewAPI} from '@/apis/home'
+import {getNewAPI} from '@/apis/home'
 import { ref,onMounted } from 'vue'
 
 
@@ -1672,7 +1672,7 @@ import { ref,onMounted } from 'vue'
 const newList = ref([])
 
 const getNewList = async ()=>{
-  const res = await findNewAPI()
+  const res = await getNewAPI()
   newList.value = res.result
 }
 
@@ -1697,5 +1697,121 @@ onMounted(()=>{
 </template>
 
 //...以下代码不变
+
+```
+
+
+#### 13.6 人气推荐模块实现
+
+封装接口src/apis/home.js
+```js
+// ...以上代码不变
+
+// 获取人气推荐请求
+export const getHotAPI = ()=>{
+  return httpInstance({
+    url:'/home/hot'
+  })
+}
+```
+
+静态结构及数据渲染src/views/Home/components/HomeHot.vue
+```js
+<script setup>
+import HomePanel from './HomePanel.vue'
+import { getHotAPI } from '@/apis/home'
+import { ref } from 'vue'
+const hotList = ref([])
+const getHotList = async () => {
+  const res = await getHotAPI()
+  hotList.value = res.result
+}
+
+onMounted(()=>{
+  getHotList()
+})
+
+</script>
+
+<template>
+  <HomePanel title="人气推荐" sub-title="人气爆款 不容错过">
+      <ul class="goods-list">
+        <li v-for="item in hotList" :key="item.id">
+          <RouterLink to="/">
+            <img :src="item.picture" alt="" />
+            <p class="name">{{ item.title }}</p>
+            <p class="desc">{{ item.alt }}</p>
+          </RouterLink>
+        </li>
+      </ul>
+  </HomePanel>
+</template>
+
+<style scoped lang='scss'>
+.goods-list {
+  display: flex;
+  justify-content: space-between;
+  height: 426px;
+
+  li {
+    width: 306px;
+    height: 406px;
+    transition: all .5s;
+
+    &:hover {
+      transform: translate3d(0, -3px, 0);
+      box-shadow: 0 3px 8px rgb(0 0 0 / 20%);
+    }
+
+    img {
+      width: 306px;
+      height: 306px;
+    }
+
+    p {
+      font-size: 22px;
+      padding-top: 12px;
+      text-align: center;
+    }
+
+    .desc {
+      color: #999;
+      font-size: 18px;
+    }
+  }
+}
+</style>
+```
+
+
+#### 13.7 图片懒加载指令
+电商网站的首页通常会很长，用户不一定能访问到页面靠下面的图片，这类图片通过懒加载优化手段可以做到只有进入视口区域才发送图片请求
+
+实现步骤
+ 1. 注册全局自定义指令
+ 2. 判断是否进入视口区域
+ 3. 如果图片进入到视口区域发送网络请求
+
+
+指令用法
+```js
+<img v-img-lazy="item.picture" />
+```
+在图片img标签身上绑定指令，该图片只有在正式进入到视口区域时才会发送图片网络请求
+
+在全局注册自定义指令
+src/main.js
+```js
+
+// .... 以上内容不变
+
+// 注册全局自定义指令
+app.directive('img-lazy',{
+  mounted(el,binding){
+    // el: 指令所绑定的元素，可以用来直接操作 DOM
+    // binding: binding.value 是传给指令的值(指令等于号后面绑定的表达式的值，这里就是图片url），binding.arg 是传给指令的参数
+    console.log(el,binding.value)
+  }
+})
 
 ```
