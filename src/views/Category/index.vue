@@ -1,21 +1,32 @@
 <script setup>
-import {getCategoryAPI} from '@/apis/category'
-import {ref, onMounted} from 'vue'
-import { useRoute } from 'vue-router'
+import { getCategoryAPI } from "@/apis/category";
+import { getBannerAPI } from "@/apis/home";
+import { ref, onMounted } from "vue";
+import { useRoute } from "vue-router";
 // 获取数据
-const categoryData = ref({})
+const categoryData = ref({});
 
-const route = useRoute()
+const route = useRoute();
 
-const getCategory = async()=>{
-  const res = await getCategoryAPI(route.params.id)
-  categoryData.value = res.result
-}
+const getCategory = async () => {
+  const res = await getCategoryAPI(route.params.id);
+  categoryData.value = res.result;
+};
 
-onMounted(()=>{
-  getCategory()
-})
+onMounted(() => {
+  getCategory();
+});
 
+const bannerList = ref([]);
+
+const getBannerList = async () => {
+  const res = await getBannerAPI({ distributionSite: "2" });
+  bannerList.value = res.result;
+};
+
+onMounted(() => {
+  getBannerList();
+});
 </script>
 
 <template>
@@ -28,10 +39,17 @@ onMounted(()=>{
           <el-breadcrumb-item>{{ categoryData.name }}</el-breadcrumb-item>
         </el-breadcrumb>
       </div>
+      <!-- 轮播图 -->
+      <div class="home-banner">
+        <el-carousel height="500px" :interval="3000">
+          <el-carousel-item v-for="item in bannerList" :key="item.id">
+            <img :src="item.imgUrl" alt="" />
+          </el-carousel-item>
+        </el-carousel>
+      </div>
     </div>
   </div>
 </template>
-
 
 <style scoped lang="scss">
 .top-category {
@@ -55,7 +73,6 @@ onMounted(()=>{
       li {
         width: 168px;
         height: 160px;
-
 
         a {
           text-align: center;
@@ -109,6 +126,16 @@ onMounted(()=>{
 
   .bread-container {
     padding: 25px 0;
+  }
+}
+.home-banner {
+  width: 1240px;
+  height: 500px;
+  margin: 0 auto;
+
+  img {
+    width: 100%;
+    height: 500px;
   }
 }
 </style>
