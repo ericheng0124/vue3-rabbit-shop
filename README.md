@@ -2152,3 +2152,72 @@ import GoodsItem from './GoodsItem.vue'
 
 // ...以下代码不变
 ```
+
+### 14 一级分类路由配置
+```js
+// createRouter: 创建路由实例
+// createWebHistory: 创建history模式路由
+// import.meta.env.BASE_URL: 项目的基础路径
+// children: 子路由
+
+import { createRouter, createWebHistory } from 'vue-router'
+import Layout from '@/views/Layout/index.vue'
+import Login from '@/views/Login/index.vue'
+import Home from '@/views/Home/index.vue'
+import Category from '@/views/Category/index.vue'
+
+const router = createRouter({
+  history: createWebHistory(import.meta.env.BASE_URL),
+  // path和components对应关系的位置
+  routes: [
+    {
+      path:'/',
+      component: Layout,
+      children:[
+        {
+          // path设置为空，表示默认子路由
+          path:'',
+          component: Home
+        },
+        {
+          path:'/category/:id',  // 绑定一级路由标识
+          component: Category
+        }
+      ]
+    },
+    {
+      path:'/login',
+      component: Login,
+    }
+  ],
+})
+
+export default router
+
+```
+
+修改导航页LayoutHeader和LayoutFixed
+
+```js
+<template>
+  <header class='app-header'>
+    <div class="container">
+      <h1 class="logo">
+        <RouterLink to="/">小兔鲜</RouterLink>
+      </h1>
+      <ul class="app-header-nav">
+        <li class="home" v-for="item in categoryStore.categoryList" :key="item.id">
+          <!-- 将id作为标识传入 -->
+          <RouterLink :to="`/category/${item.id}`">{{item.name}}</RouterLink>
+        </li>
+      </ul>
+      <div class="search">
+        <i class="iconfont icon-search"></i>
+        <input type="text" placeholder="搜一搜">
+      </div>
+      <!-- 头部购物车 -->
+      
+    </div>
+  </header>
+</template>
+```
