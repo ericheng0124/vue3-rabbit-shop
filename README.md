@@ -3008,3 +3008,98 @@ onMounted(()=>{
 }
 </style>
 ```
+
+#### 15.2 基础商品列表实现
+src/apis/category.js
+```js
+/**
+ * @description: 获取导航数据
+ * @data { 
+     categoryId: 1005000 ,
+     page: 1,
+     pageSize: 20,
+     sortField: 'publishTime' | 'orderNum' | 'evaluateNum'
+   } 
+ * @return {*}
+ */
+export const getSubCategoryAPI = (data) => {
+  return request({
+    url:'/category/goods/temporary',
+    method:'POST',
+    data
+  })
+}
+```
+
+src/views/Subcategory/index.vue
+```js
+<script setup>
+  
+// 获取基础列表数据渲染
+const goodList = ref([])
+const reqData = ref({
+  categoryId: route.params.id,
+  page: 1,
+  pageSize: 20,
+  sortField: 'publishTime'
+})
+  
+const getGoodList = async () => {
+  const res = await getSubCategoryAPI(reqData.value)
+  console.log(res)
+  goodList.value = res.result.items
+}
+  
+onMounted(() => getGoodList())
+  
+</script>
+
+<template>
+  <div class="container ">
+    <!-- 面包屑 -->
+    <div class="bread-container">
+      <el-breadcrumb separator=">">
+        <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+        <el-breadcrumb-item :to="{ path: `/category/${categoryData.parentId}` }">{{ categoryData.parentName }}
+        </el-breadcrumb-item>
+        <el-breadcrumb-item>{{ categoryData.name }}</el-breadcrumb-item>
+      </el-breadcrumb>
+    </div>
+    <div class="sub-container">
+      <el-tabs>
+        <el-tab-pane label="最新商品" name="publishTime"></el-tab-pane>
+        <el-tab-pane label="最高人气" name="orderNum"></el-tab-pane>
+        <el-tab-pane label="评论最多" name="evaluateNum"></el-tab-pane>
+      </el-tabs>
+      <div class="body">
+        <!-- 商品列表-->
+        <GoodsItem v-for="goods in goodList" :key="goods.id" :goods="goods"/>
+      </div>
+    </div>
+  </div>
+
+</template>
+
+
+```
+
+#### 15.3 列表筛选实现
+思路：tab组件切换时修改reqData中的sortField字段，重新拉取接口列表
+```js
+<script setup>
+// tab切换回调
+const tabChange = () => {
+  console.log('tab切换了', reqData.value.sortField)
+  reqData.value.page = 1
+  getGoodList()
+}
+</script>
+
+<template>
+  <el-tabs v-model="reqData.sortField" @tab-change="tabChange">
+    <el-tab-pane label="最新商品" name="publishTime"></el-tab-pane>
+    <el-tab-pane label="最高人气" name="orderNum"></el-tab-pane>
+    <el-tab-pane label="评论最多" name="evaluateNum"></el-tab-pane>
+  </el-tabs>
+</template>
+```
