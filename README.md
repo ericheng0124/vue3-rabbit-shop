@@ -2637,3 +2637,250 @@ onMounted(() => {
 })
 </script>
 ```
+
+#### 14.6 使用逻辑函数拆分业务
+
+将category页面的banner和分类category按逻辑拆分为2个模块，将需要用的数据return出去
+在src/views/Category/composables/useBanner.js和useCategory.js
+
+将之前index.js中的相关逻辑分别拆分到2个子模块中
+useBanner.js
+```js
+// 封装banner轮播图相关的业务代码
+import { ref, onMounted } from "vue"
+import { getBannerAPI } from "@/apis/home"
+
+export const useBanner = () => {
+  const bannerList = ref([])
+
+  const getBannerList = async () => {
+    const res = await getBannerAPI({ distributionSite: "2" })
+    bannerList.value = res.result
+  }
+
+  onMounted(() => {
+    getBannerList()
+  })
+
+  return {
+    bannerList
+  }
+}
+```
+
+useCategory.js
+```js
+// 封装分类数据业务数据相关代码
+import { getCategoryAPI } from "@/apis/category"
+import { ref, onMounted } from "vue"
+import { useRoute } from "vue-router"
+import { onBeforeRouteUpdate } from "vue-router"
+
+export const useCategory = () => {
+  const categoryData = ref({})
+
+  const route = useRoute()
+
+  const getCategory = async (id = route.params.id) => {
+    const res = await getCategoryAPI(id)
+    categoryData.value = res.result
+  }
+
+  onMounted(() => {
+    getCategory()
+  })
+
+  // 目标：路由参数变化的时候，可以把分类数据接口重新发送
+  onBeforeRouteUpdate((to) => {
+    // console.log("路由变化了")
+    console.log(to) // to是目标路由对象
+    // 存在问题：使用最新的路由参数请求最新的分类数据
+    getCategory(to.params.id)
+  })
+  return {
+    categoryData
+  }
+}
+
+```
+
+index.js
+```js
+<script setup>
+import GoodsItem from "@/views/Home/components/GoodsItem.vue"
+import { useBanner } from "./composables/useBanner"
+import {useCategory} from './composables/useCategory'
+
+// 获取轮播图数据
+const { bannerList } = useBanner()
+
+// 获取分类数据
+const { categoryData }=useCategory()
+
+</script>
+
+// ... 以下代码不变
+```
+
+### 15 二级分类
+
+基础静态结构
+src/views/SubCategory/index.vue
+```js
+<script setup>
+
+
+</script>
+
+<template>
+  <div class="container ">
+    <!-- 面包屑 -->
+    <div class="bread-container">
+      <el-breadcrumb separator=">">
+        <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+        <el-breadcrumb-item :to="{ path: '/' }">居家
+        </el-breadcrumb-item>
+        <el-breadcrumb-item>居家生活用品</el-breadcrumb-item>
+      </el-breadcrumb>
+    </div>
+    <div class="sub-container">
+      <el-tabs>
+        <el-tab-pane label="最新商品" name="publishTime"></el-tab-pane>
+        <el-tab-pane label="最高人气" name="orderNum"></el-tab-pane>
+        <el-tab-pane label="评论最多" name="evaluateNum"></el-tab-pane>
+      </el-tabs>
+      <div class="body">
+         <!-- 商品列表-->
+      </div>
+    </div>
+  </div>
+
+</template>
+
+
+
+<style lang="scss" scoped>
+.bread-container {
+  padding: 25px 0;
+  color: #666;
+}
+
+.sub-container {
+  padding: 20px 10px;
+  background-color: #fff;
+
+  .body {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 0 10px;
+  }
+
+  .goods-item {
+    display: block;
+    width: 220px;
+    margin-right: 20px;
+    padding: 20px 30px;
+    text-align: center;
+
+    img {
+      width: 160px;
+      height: 160px;
+    }
+
+    p {
+      padding-top: 10px;
+    }
+
+    .name {
+      font-size: 16px;
+    }
+
+    .desc {
+      color: #999;
+      height: 29px;
+    }
+
+    .price {
+      color: $priceColor;
+      font-size: 20px;
+    }
+  }
+
+  .pagination-container {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+  }
+
+
+}
+</style>
+```
+
+路由配置
+src/router/index.js
+```js
+// createRouter: 创建路由实例
+// createWebHistory: 创建history模式路由
+// import.meta.env.BASE_URL: 项目的基础路径
+// children: 子路由
+
+import { createRouter, createWebHistory } from 'vue-router'
+import Layout from '@/views/Layout/index.vue'
+import Login from '@/views/Login/index.vue'
+import Home from '@/views/Home/index.vue'
+import Category from '@/views/Category/index.vue'
+import SubCategory from '@/views/SubCategory/index.vue'
+
+const router = createRouter({
+  history: createWebHistory(import.meta.env.BASE_URL),
+  // path和components对应关系的位置
+  routes: [
+    {
+      path:'/',
+      component: Layout,
+      children:[
+        {
+          // path设置为空，表示默认子路由
+          path:'',
+          component: Home
+        },
+        {
+          path:'/category/:id',
+          component: Category
+        },
+        {
+          path:'/category/sub/:id',
+          component: SubCategory
+        }
+      ]
+    },
+    {
+      path:'/login',
+      component: Login,
+    }
+  ],
+})
+
+export default router
+
+```
+
+修改跳转逻辑
+
+src/views/Category/index.js
+```js
+<!-- 分类列表渲染 -->
+<div class="sub-list">
+  <h3>全部分类</h3>
+  <ul>
+    <li v-for="i in categoryData.children" :key="i.id">
+      {/* 配置路由路径 */}
+      <RouterLink :to="`/category/sub/${i.id}`">
+        <img :src="i.picture" />
+        <p>{{ i.name }}</p>
+      </RouterLink>
+    </li>
+  </ul>
+</div>
+```
