@@ -2407,7 +2407,104 @@ src/views/Layou/components/LayoutHeader.vue
 </template>
 ```
 
-#### 14.3 分类列表渲染
+#### 14.3 一级分类轮播图实现
+
+这里复用Home内的HomeBanner子组件实例实现
+修改请求增加参数 distributionSite 参数默认为1 商品为2
+src/apis/home.js
+```js
+// 获取banner
+export const getBannerAPI = (params = {})=>{
+  // distributionSite 参数默认为1 商品为2
+  const {distributionSite='1'} = params
+  return httpInstance({
+    url:'/home/banner',
+    params:{
+      distributionSite
+    }
+  })
+}
+
+// ... 一下代码不变
+```
+
+
+src/views/Category/index.vue
+```js
+<script setup>
+import { getBannerAPI } from "@/apis/home"
+import { ref, onMounted } from "vue"
+import { getCategoryAPI } from "@/apis/category"
+
+// 获取数据
+const categoryData = ref({})
+
+const route = useRoute()
+
+const getCategory = async () => {
+  const res = await getCategoryAPI(route.params.id)
+  categoryData.value = res.result
+}
+
+onMounted(() => {
+  getCategory()
+})
+
+const bannerList = ref([])
+
+const getBannerList = async () => {
+  const res = await getBannerAPI({ distributionSite: "2" })
+  bannerList.value = res.result
+}
+
+onMounted(() => {
+  getBannerList()
+})
+</script>
+
+<template>
+  <div class="top-category">
+    <div class="container m-top-20">
+      <!-- 面包屑 -->
+      <div class="bread-container">
+        <el-breadcrumb separator=">">
+          <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+          <el-breadcrumb-item>{{ categoryData.name }}</el-breadcrumb-item>
+        </el-breadcrumb>
+      </div>
+      <!-- 轮播图 -->
+      <div class="home-banner">
+        <el-carousel height="500px" :interval="3000">
+          <el-carousel-item v-for="item in bannerList" :key="item.id">
+            <img :src="item.imgUrl" alt="" />
+          </el-carousel-item>
+        </el-carousel>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped lang="scss">
+
+// 。。。以上代码不变
+
+.home-banner {
+  width: 1240px;
+  height: 500px;
+  margin: 0 auto;
+
+  img {
+    width: 100%;
+    height: 500px;
+  }
+}
+</style>
+
+
+```
+
+
+#### 14.4 分类列表渲染
 
 src/views/Category/index.vue
 ```js
@@ -2456,4 +2553,87 @@ src/views/Category/index.vue
     </div>
   </div>
 </template>
+```
+
+#### 14.5 解决路由缓存问题
+
+路由产生的原因是，在只有路由参数发生变化时，会复用组件实例。例如在params请求时，携带的关键字
+复用实例会导致生命周期onMounted不执行，新的请求不执行，新数据不会获取，不会更新
+
+解决办法有2种
+1. 加Key，简单粗暴，不在意新能问题可以选择-原理：让组件实例不复用，强制销毁重建。
+本项目实现如下：
+在组件路由出口位子src/views/Layout/index.vue
+给route-view添加key，以当前完整路由路径为key值，给route-view组件绑定
+```js
+// ... 以上代码不变
+
+<template>
+  <LayoutFixed />
+  <LayoutNav />
+  <LayoutHeader />
+  <!-- 二级路由出口 -->
+  <!-- 添加key 破坏组件复用机制 强制销毁重建 -->
+  <RouterView :key="$route.fullPath"/>
+  <LayoutFooter />
+</template>
+
+```
+最常见的用例是与`v-for`结合：
+```js
+<ul>
+  <li v-for'item in items' :key='item.id'>...</li>
+</ul>
+```
+也可以用于强制替换一个元素/组件而不是复用它
+- 在适当时侯触发组件的生命周期钩子
+- 触发过渡
+
+2. 使用onBeforeRouteUpdate钩子函数，精细化控制，在意性能问题可以选择。-原理：监听路由变化，变化之后执行数据更新操作。
+
+onBeforeRouteUpdate钩子函数可以在每次路由更新之前执行，在回调中执行需要数据更新的业务逻辑即可
+本项目实现如下：
+在src/views/Category/index.vue
+```js
+<script setup>
+import { getCategoryAPI } from "@/apis/category"
+import { getBannerAPI } from "@/apis/home"
+import { ref, onMounted } from "vue"
+import { useRoute } from "vue-router"
+import GoodsItem from "@/views/Home/components/GoodsItem.vue"
+import { onBeforeRouteUpdate } from "vue-router"
+// 获取数据
+const categoryData = ref({})
+
+const route = useRoute()
+
+// 这里修改参数当没有值时为route.params.id
+const getCategory = async (id = route.params.id) => {
+  const res = await getCategoryAPI(id)
+  categoryData.value = res.result
+};
+
+onMounted(() => {
+  getCategory()
+})
+
+// 目标：路由参数变化的时候，可以把分类数据接口重新发送
+onBeforeRouteUpdate((to) => {
+  // console.log("路由变化了")
+  console.log(to) // to是目标路由对象
+  // 存在问题：使用最新的路由参数请求最新的分类数据
+  getCategory(to.params.id)
+})
+
+const bannerList = ref([])
+
+const getBannerList = async () => {
+  const res = await getBannerAPI({ distributionSite: "2" })
+  bannerList.value = res.result
+};
+
+onMounted(() => {
+  getBannerList()
+})
+</script>
 ```
