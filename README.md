@@ -3103,3 +3103,43 @@ const tabChange = () => {
   </el-tabs>
 </template>
 ```
+
+#### 15.4 列表无限加载
+实现方案，监视滚动条是否触底，触底了，就将reqData.page++,再次发送请求，将请求结果拼接到之前的结果后面，在渲染页面，当无新的数据之后停监听。
+
+```js
+// 加载更多
+const disabled = ref(false)
+
+const load = async()=>{
+  // console.log('加载了')
+  // 获取下一页的数据
+  reqData.value.page++
+  const res = await getSubCategoryAPI(reqData.value)
+  goodList.value = [...goodList.value,...res.result.items]
+  // 加载完毕，停止更新
+  if(res.result.items.length === 0){
+    disabled.value = true
+  }
+}
+
+<div class="body" v-infinite-scroll="load" :infinite-scroll-disabled="disabled">
+  <!-- 商品列表-->
+  <GoodsItem v-for="goods in goodList" :key="goods.id" :goods="goods"/>
+</div>
+```
+
+#### 15.5 定制路由滚动行为
+当访问二级分类，商品页面滑动至底部之后，在切换分类，滚动条还是保持在底部，这里需要给路由配置滚动行为
+src/router/index.js
+```js
+routes:[...],
+// 路由滚动行为定制
+scrollBehavior(){
+  return {
+    behavior:'smooth', // 平滑变更
+    top:0 // 置顶
+  }
+},
+```
+
