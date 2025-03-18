@@ -3146,7 +3146,7 @@ scrollBehavior(){
 
 ### 16详情页
 
-#### 1 整体认识和路由配置
+#### 16.1 整体认识和路由配置
 点击商品进入到详情页
 
 详情页静态结构
@@ -3522,7 +3522,7 @@ src/router/index.js
 ```
 
 
-#### 2 详情页基础数据渲染
+#### 16.2 详情页基础数据渲染
 
 src/apis/detail.js
 
@@ -3931,6 +3931,160 @@ onMounted(()=>getGoods())
   padding: 25px 0;
 }
 </style>
+```
+
+
+#### 16.3 详情页-热榜-基础组件封装和基础数据获取及渲染
+
+- 16.3.1 基础组件封装-静态结构
+src/views/Detail/components/DetailHot.vue
+
+```js
+<script setup>
+
+</script>
+
+
+<template>
+  <div class="goods-hot">
+    <h3>周日榜单</h3>
+    <!-- 商品区块 -->
+    <RouterLink to="/" class="goods-item" v-for="item in 3" :key="item.id">
+      <img :src="item.picture" alt="" />
+      <p class="name ellipsis">一双男鞋</p>
+      <p class="desc ellipsis">一双好穿的男鞋</p>
+      <p class="price">&yen;200.00</p>
+    </RouterLink>
+  </div>
+</template>
+
+
+<style scoped lang="scss">
+.goods-hot {
+  h3 {
+    height: 70px;
+    background: $helpColor;
+    color: #fff;
+    font-size: 18px;
+    line-height: 70px;
+    padding-left: 25px;
+    margin-bottom: 10px;
+    font-weight: normal;
+  }
+
+  .goods-item {
+    display: block;
+    padding: 20px 30px;
+    text-align: center;
+    background: #fff;
+
+    img {
+      width: 160px;
+      height: 160px;
+    }
+
+    p {
+      padding-top: 10px;
+    }
+
+    .name {
+      font-size: 16px;
+    }
+
+    .desc {
+      color: #999;
+      height: 29px;
+    }
+
+    .price {
+      color: $priceColor;
+      font-size: 20px;
+    }
+  }
+}
+</style>
+```
+
+在父组件src/views/Detail/index.vue 中引入热榜组件
+```js
+<!-- 24热榜+专题推荐 -->
+<div class="goods-aside">
+  <!-- 24小时 -->
+  <DetailHot />
+  <!-- 周 -->
+  <DetailHot />
+</div>
+```
+
+
+
+- 16.3.2 接口封装
+src/apis/detail.js
+```js
+/**
+ * 获取热榜商品
+ * @param {Number} id - 商品id
+ * @param {Number} type - 1代表24小时热销榜 2代表周热销榜
+ * @param {Number} limit - 获取个数
+ */
+export const getHotGoodsAPI = ({ id, type, limit = 3 }) => {
+  return request({
+    url:'/goods/hot',
+    params:{
+      id, 
+      type, 
+      limit
+    }
+  })
+}
+```
+
+- 16.3.3 获取数据并渲染模板
+
+src/views/Detail/components/DetailHot.vue
+```js
+<script setup>
+import { onMounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
+// 以24小时热榜为例获取数据渲染模板
+// 1. 封装接口
+// 2. 调用接口渲染模板
+import { getHotGoodsAPI } from '@/apis/detail'
+
+const route = useRoute()
+
+const hotList = ref([])
+
+const getHotList = async()=>{
+  const res = await getHotGoodsAPI(
+    {
+      id:route.params.id,
+      type:1
+    }
+  )
+  hotList.value = res.result
+}
+
+onMounted(()=>{
+  getHotList()
+})
+
+</script>
+
+
+<template>
+  <div class="goods-hot">
+    <h3>周日榜单</h3>
+    <!-- 商品区块 -->
+    <RouterLink to="/" class="goods-item" v-for="item in hotList" :key="item.id">
+      <img :src="item.picture" alt="" />
+      <p class="name ellipsis">{{ item.name }}</p>
+      <p class="desc ellipsis">{{ item.desc }}</p>
+      <p class="price">&yen;{{ item.price }}</p>
+    </RouterLink>
+  </div>
+</template>
+
 ```
 
 
