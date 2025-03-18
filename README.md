@@ -4088,3 +4088,47 @@ onMounted(()=>{
 ```
 
 
+#### 16.4 详情页-热榜-适配title和列表内容
+
+```js
+// 为满足不同title和内容的适配，这里设计一个props值来区别
+
+const props = defineProps({
+  hotType:{
+    type:Number
+  }
+})
+
+// 适配title  type=1 为24小时榜  type=2 为周榜
+const TYPEMAP = {
+  1:'24小时热榜',
+  2:'周热榜'
+}
+
+const title = computed(()=>TYPEMAP[props.hotType])
+
+const getHotList = async()=>{
+  const res = await getHotGoodsAPI(
+    {
+      id:route.params.id,
+      type:props.hotType
+    }
+  )
+  hotList.value = res.result
+}
+
+<h3>{{title}}</h3>
+
+```
+
+在父组件传入对应的type标记值
+
+```js
+<!-- 24热榜+专题推荐 -->
+<div class="goods-aside">
+  <!-- 24小时 -->
+  <DetailHot :hotType="1"/>
+  <!-- 周 -->
+  <DetailHot :hotType="2"/>
+</div>
+```
