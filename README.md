@@ -4132,3 +4132,143 @@ const getHotList = async()=>{
   <DetailHot :hotType="2"/>
 </div>
 ```
+
+
+#### 16.5 图片预览组件-小图切换大图显示
+
+新建图片预览组件，因为是公共组件，多个位子都会用到所以放大components目录下。
+src/components/ImageView/index.vue
+
+基础静态模板
+```js
+<script setup>
+// 图片列表
+const imageList = [
+  "https://yanxuan-item.nosdn.127.net/d917c92e663c5ed0bb577c7ded73e4ec.png",
+  "https://yanxuan-item.nosdn.127.net/e801b9572f0b0c02a52952b01adab967.jpg",
+  "https://yanxuan-item.nosdn.127.net/b52c447ad472d51adbdde1a83f550ac2.jpg",
+  "https://yanxuan-item.nosdn.127.net/f93243224dc37674dfca5874fe089c60.jpg",
+  "https://yanxuan-item.nosdn.127.net/f881cfe7de9a576aaeea6ee0d1d24823.jpg"
+]
+</script>
+
+
+<template>
+  <div class="goods-image">
+    <!-- 左侧大图-->
+    <div class="middle" ref="target">
+      <img :src="imageList[0]" alt="" />
+      <!-- 蒙层小滑块 -->
+      <div class="layer" :style="{ left: `0px`, top: `0px` }"></div>
+    </div>
+    <!-- 小图列表 -->
+    <ul class="small">
+      <li v-for="(img, i) in imageList" :key="i">
+        <img :src="img" alt="" />
+      </li>
+    </ul>
+    <!-- 放大镜大图 -->
+    <div class="large" :style="[
+      {
+        backgroundImage: `url(${imageList[0]})`,
+        backgroundPositionX: `0px`,
+        backgroundPositionY: `0px`,
+      },
+    ]" v-show="false"></div>
+  </div>
+</template>
+
+<style scoped lang="scss">
+.goods-image {
+  width: 480px;
+  height: 400px;
+  position: relative;
+  display: flex;
+
+  .middle {
+    width: 400px;
+    height: 400px;
+    background: #f5f5f5;
+  }
+
+  .large {
+    position: absolute;
+    top: 0;
+    left: 412px;
+    width: 400px;
+    height: 400px;
+    z-index: 500;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    background-repeat: no-repeat;
+    // 背景图:盒子的大小 = 2:1  将来控制背景图的移动来实现放大的效果查看 background-position
+    background-size: 800px 800px;
+    background-color: #f8f8f8;
+  }
+
+  .layer {
+    width: 200px;
+    height: 200px;
+    background: rgba(0, 0, 0, 0.2);
+    // 绝对定位 然后跟随咱们鼠标控制left和top属性就可以让滑块移动起来
+    left: 0;
+    top: 0;
+    position: absolute;
+  }
+
+  .small {
+    width: 80px;
+
+    li {
+      width: 68px;
+      height: 68px;
+      margin-left: 12px;
+      margin-bottom: 15px;
+      cursor: pointer;
+
+      &:hover,
+      &.active {
+        border: 2px solid $xtxColor;
+      }
+    }
+  }
+}
+</style>
+```
+
+将组件引入到详情页对应位子
+
+src/views/Detail/index.vue
+```js
+import ImageView from '@/components/ImageView/index.vue'
+
+<div class="media">
+  <!-- 图片预览区 -->
+  <ImageView />
+```
+
+根据基础静态模板可以看出，大图`:src="imageList[0]"`默认绑定的图片列表的第1个，这个我们可以将图片列表下标绑定给该属性，然后通过小图的鼠标mouseenter切换实现大图切换。
+所以先生成一个值用来存储图片列表下标
+```js
+// 1.小图切换大图显示
+const activeIndex = ref(0)
+
+// 鼠标滑入事件函数
+const enterHandler = (i)=>{
+  activeIndex.value = i
+}
+
+<div class="middle" ref="target">
+  {/* 绑定下标值 */}
+  <img :src="imageList[activeIndex]" alt="" />
+  <!-- 蒙层小滑块 -->
+  <div class="layer" :style="{ left: `0px`, top: `0px` }"></div>
+</div>
+<!-- 小图列表 -->
+<ul class="small">
+  {/* 绑定鼠标事件，绑定相应滑入样式 */}
+  <li v-for="(img, i) in imageList" :key="i" @mouseenter="enterHandler(i)" :class="activeIndex === i ? 'active':''">
+    <img :src="img" alt="" />
+  </li>
+</ul>
+
+```
