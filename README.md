@@ -4136,6 +4136,8 @@ const getHotList = async()=>{
 
 #### 16.5 图片预览组件-小图切换大图显示
 
+**思路：维护一个数组图片列表，鼠标滑入小图记录当前小图下标值，通过下标值在数组中取对应图片，显示到大图位置**
+
 新建图片预览组件，因为是公共组件，多个位子都会用到所以放大components目录下。
 src/components/ImageView/index.vue
 
@@ -4272,3 +4274,131 @@ const enterHandler = (i)=>{
 </ul>
 
 ```
+
+
+#### 16.6 图片预览组件-放大镜效果
+
+功能拆解：
+1. 左侧滑块跟随鼠标移动
+    思路：
+      获取到当前的鼠标在盒子内的相对位置（使用vueuse的useMouseInElement），控制滑块跟随鼠标移动（left/top）
+        - 有效移动范围内的计算逻辑
+            横向：100(蒙层小盒子宽度一半的值) < elementX < 300(大盒子宽度-蒙层小盒子宽度一半的值) , left = elementX - 小滑块宽度一半
+            纵向：100(蒙层小盒子宽度一半的值) < elementY < 300(大盒子宽度-蒙层小盒子宽度一半的值) , top = elementY - 小滑块高度一半
+        - 边界距离控制
+            横向：elementX > 300 left = 200 elementX < 100 left =0
+            纵向：elementY > 300 top = 200 elementY < 100 top = 0
+2. 右侧大图放大效果实现
+    效果：为实现大图效果，大图的宽高是小图的2倍
+    思路：大图的用方向和滑块的移动方向相反，且数值为2倍
+3. 鼠标移入控制滑块和大图显示隐藏
+
+```js
+<script setup>
+import { ref,watch } from "vue"
+import { useMouseInElement } from "@vueuse/core"
+
+{/* 将图片列表使用props传参的方式由父组件传递过来 */}
+const props = defineProps({
+  imageList:{
+    type:Array,
+    default:()=>[]
+  }
+})
+
+// 图片列表
+// const imageList = [
+//   "https://yanxuan-item.nosdn.127.net/d917c92e663c5ed0bb577c7ded73e4ec.png",
+//   "https://yanxuan-item.nosdn.127.net/e801b9572f0b0c02a52952b01adab967.jpg",
+//   "https://yanxuan-item.nosdn.127.net/b52c447ad472d51adbdde1a83f550ac2.jpg",
+//   "https://yanxuan-item.nosdn.127.net/f93243224dc37674dfca5874fe089c60.jpg",
+//   "https://yanxuan-item.nosdn.127.net/f881cfe7de9a576aaeea6ee0d1d24823.jpg"
+// ]
+
+
+
+// 1.小图切换大图显示
+const activeIndex = ref(0)
+
+const enterHandler = (i)=>{
+  activeIndex.value = i
+}
+
+// 2.获取鼠标相对位置
+const target = ref(null)
+
+const {elementX,elementY,isOutside} = useMouseInElement(target)
+
+// 3. 控制滑块跟随鼠标移动（监听elementX/Y变化，一旦变化 重新设置left/top)
+// 滑块的2个做标
+const left = ref(0)
+const top = ref(0)
+
+
+// 初始化大图2个做标
+const positionX= ref(0)
+const positionY= ref(0)
+
+watch([elementX,elementY,isOutside],()=>{
+  // 这里优化一下性能，如果没有进入到区域就不执行下列代码
+  if(isOutside.value) return
+  // console.log('后续逻辑执行了')
+  // 有效范围内控制滑块距离
+  // 横向
+  if(elementX.value > 100 && elementX.value < 300){
+    left.value = elementX.value - 100
+  }
+  // 纵向
+  if(elementY.value > 100 && elementY.value < 300){
+    top.value = elementY.value - 100
+  }
+  // 边界处理
+  if(elementX.value > 300){
+    left.value = 200
+  }
+  if(elementX.value < 100){
+    left.value = 0
+  }
+  if(elementY.value > 300){
+    top.value = 200
+  }
+  if(elementY.value < 100){
+    top.value = 0
+  }
+  // 4. 控制大图显示
+  positionX.value = -left.value * 2
+  positionY.value = -top.value * 2
+})
+
+
+</script>
+
+<template>
+  <!-- {{ elementX}},{{elementY}},{{isOutside }} -->
+  <div class="goods-image">
+    <!-- 左侧大图-->
+    <div class="middle" ref="target">
+      <img :src="imageList[activeIndex]" alt="" />
+      <!-- 蒙层小滑块 -->
+      <div class="layer" v-show="!isOutside" :style="{ left: `${left}px`, top: `${top}px` }"></div>
+    </div>
+    <!-- 小图列表 -->
+    <ul class="small">
+      <li v-for="(img, i) in imageList" :key="i" @mouseenter="enterHandler(i)" :class="activeIndex === i ? 'active':''">
+        <img :src="img" alt="" />
+      </li>
+    </ul>
+    <!-- 放大镜大图 -->
+    <div class="large" :style="[
+      {
+        backgroundImage: `url(${imageList[activeIndex]})`,
+        backgroundPositionX: `${positionX}px`,
+        backgroundPositionY: `${positionY}px`,
+      },
+    ]" v-show="!isOutside"></div>
+  </div>
+</template>
+
+```
+
+
