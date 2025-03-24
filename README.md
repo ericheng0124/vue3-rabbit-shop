@@ -5204,5 +5204,103 @@ const login = ()=>{
 
 ```
 
+#### 17.3 登陆处理
+src/apis/user.js
+1. 新建api接口
+```js
+import request from '@/utils/http'
+
+// 登陆请求
+export const loginAPI = ({account,password})=>{
+  return request({
+    url:'/login',
+    method:'POST',
+    data:{
+      account,
+      password
+    }
+  })
+}
+```
+
+2. 引入并调用接口获取数据
+
+```js
+import {loginAPI} from '@/apis/user'
+
+const login = ()=>{
+  const {account,password} = formData.value
+  // 调用实例方法
+  formRef.value.validate(async(valid)=>{
+    // valid：所有表单都通过效验，才为true
+    // console.log(valid)
+    // 以参数作为判断条件
+    if(valid){
+      // do login
+      const res = await loginAPI({account,password})
+      // console.log(res)
+    }
+  })
+}
+```
+
+3. 提示用户，跳转路由到首页
+
+```js
+import 'element-plus/theme-chalk/el-message.css'
+import { ElMessage } from 'element-plus'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
+const login = ()=>{
+  const {account,password} = formData.value
+  // 调用实例方法
+  formRef.value.validate(async(valid)=>{
+    // valid：所有表单都通过效验，才为true
+    // console.log(valid)
+    // 以参数作为判断条件
+    if(valid){
+      // do login
+      const res = await loginAPI({account,password})
+      // console.log(res)
+      // 提示用户
+      ElMessage({
+        type:'success',
+        message:'登陆成功'
+      })
+      // 跳转首页
+      router.replace('/')
+    }
+  })
+}
+```
+
+4. 登陆失败的提示，需要做统一处理，这里我们在请求的相应拦截器位置做统一处理
+src/utils/http.js
+
+```js
+// 先导入相应的样式和ElMessage组件
+import 'element-plus/theme-chalk/el-message.css'
+import { ElMessage } from 'element-plus'
+
+// axios响应式拦截器
+httpInstance.interceptors.response.use(response => {
+  // 2xx 范围内的状态码都会触发该函数。
+  // 对响应数据做点什么
+  return response.data
+}, error => {
+  // 超出 2xx 范围的状态码都会触发该函数。
+  // 对响应错误做点什么
+  // 统一错误提示
+  // 这里不知道错误返回信息的结构可以先打印一下error
+  ElMessage({
+    type:'warning',
+    message:error.response.data.message
+  })
+  
+  return Promise.reject(error)
+})
+```
 
 

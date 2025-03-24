@@ -1,5 +1,7 @@
 // axios基础的封装
 import axios from "axios"
+import 'element-plus/theme-chalk/el-message.css'
+import { ElMessage } from 'element-plus'
 
 const httpInstance = axios.create({
   // 项目基础地址
@@ -26,6 +28,11 @@ httpInstance.interceptors.response.use(response => {
 }, error => {
   // 超出 2xx 范围的状态码都会触发该函数。
   // 对响应错误做点什么
+  // 统一错误提示
+  ElMessage({
+    type:'warning',
+    message:error.response.data.message
+  })
   return Promise.reject(error)
 })
 
