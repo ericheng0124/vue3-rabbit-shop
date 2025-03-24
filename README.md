@@ -4402,3 +4402,667 @@ watch([elementX,elementY,isOutside],()=>{
 ```
 
 
+#### 16.7 sku组件
+**sku的概念**
+`存货单位（stock keeping unit -> 库存单元）是一个会计学名词，定义为库存管理中的最小可用单元，例如纺织品中的一个SKU通常表示规格、颜色、款式，而在连锁门店中有时称单品为一个SKU`
+
+该组件在次项目中主要是在选择商品规格（颜色，尺码等）
+
+**sku组件的作用：产出当前用户选择的商品规格，为加入购物车操作提供数据信息**
+
+导入sku组件，并将相关数据使用porps方法由父组件传入
+因为是通用组件，所以在src/components/XtxSku/index.vue
+
+```js
+<template>
+  <div class="goods-sku">
+    <dl v-for="item in goods.specs" :key="item.id">
+      <dt>{{ item.name }}</dt>
+      <dd>
+        <template v-for="val in item.values" :key="val.name">
+          <img :class="{ selected: val.selected, disabled: val.disabled }" @click="clickSpecs(item, val)"
+            v-if="val.picture" :src="val.picture" />
+          <span :class="{ selected: val.selected, disabled: val.disabled }" @click="clickSpecs(item, val)" v-else>{{
+              val.name
+          }}</span>
+        </template>
+      </dd>
+    </dl>
+  </div>
+</template>
+<script>
+import { watchEffect } from 'vue'
+import getPowerSet from './power-set'
+const spliter = '★'
+// 根据skus数据得到路径字典对象
+const getPathMap = (skus) => {
+  const pathMap = {}
+  if (skus && skus.length > 0) {
+    skus.forEach(sku => {
+      // 1. 过滤出有库存有效的sku
+      if (sku.inventory) {
+        // 2. 得到sku属性值数组
+        const specs = sku.specs.map(spec => spec.valueName)
+        // 3. 得到sku属性值数组的子集
+        const powerSet = getPowerSet(specs)
+        // 4. 设置给路径字典对象
+        powerSet.forEach(set => {
+          const key = set.join(spliter)
+          // 如果没有就先初始化一个空数组
+          if (!pathMap[key]) {
+            pathMap[key] = []
+          }
+          pathMap[key].push(sku.id)
+        })
+      }
+    })
+  }
+  return pathMap
+}
+
+// 初始化禁用状态
+function initDisabledStatus (specs, pathMap) {
+  if (specs && specs.length > 0) {
+    specs.forEach(spec => {
+      spec.values.forEach(val => {
+        // 设置禁用状态
+        val.disabled = !pathMap[val.name]
+      })
+    })
+  }
+}
+
+// 得到当前选中规格集合
+const getSelectedArr = (specs) => {
+  const selectedArr = []
+  specs.forEach((spec, index) => {
+    const selectedVal = spec.values.find(val => val.selected)
+    if (selectedVal) {
+      selectedArr[index] = selectedVal.name
+    } else {
+      selectedArr[index] = undefined
+    }
+  })
+  return selectedArr
+}
+
+// 更新按钮的禁用状态
+const updateDisabledStatus = (specs, pathMap) => {
+  // 遍历每一种规格
+  specs.forEach((item, i) => {
+    // 拿到当前选择的项目
+    const selectedArr = getSelectedArr(specs)
+    // 遍历每一个按钮
+    item.values.forEach(val => {
+      if (!val.selected) {
+        selectedArr[i] = val.name
+        // 去掉undefined之后组合成key
+        const key = selectedArr.filter(value => value).join(spliter)
+        val.disabled = !pathMap[key]
+      }
+    })
+  })
+}
+
+
+export default {
+  name: 'XtxGoodSku',
+  props: {
+    // specs:所有的规格信息  skus:所有的sku组合
+    goods: {
+      type: Object,
+      default: () => ({ specs: [], skus: [] })
+    }
+  },
+  emits: ['change'],
+  setup (props, { emit }) {
+    let pathMap = {}
+    watchEffect(() => {
+      // 得到所有字典集合
+      pathMap = getPathMap(props.goods.skus)
+      // 组件初始化的时候更新禁用状态
+      initDisabledStatus(props.goods.specs, pathMap)
+    })
+
+    const clickSpecs = (item, val) => {
+      if (val.disabled) return false
+      // 选中与取消选中逻辑
+      if (val.selected) {
+        val.selected = false
+      } else {
+        item.values.forEach(bv => { bv.selected = false })
+        val.selected = true
+      }
+      // 点击之后再次更新选中状态
+      updateDisabledStatus(props.goods.specs, pathMap)
+      // 把选择的sku信息传出去给父组件
+      // 触发change事件将sku数据传递出去
+      const selectedArr = getSelectedArr(props.goods.specs).filter(value => value)
+      // 如果选中得规格数量和传入得规格总数相等则传出完整信息(都选择了)
+      // 否则传出空对象
+      if (selectedArr.length === props.goods.specs.length) {
+        // 从路径字典中得到skuId
+        const skuId = pathMap[selectedArr.join(spliter)][0]
+        const sku = props.goods.skus.find(sku => sku.id === skuId)
+        // 传递数据给父组件
+        emit('change', {
+          skuId: sku.id,
+          price: sku.price,
+          oldPrice: sku.oldPrice,
+          inventory: sku.inventory,
+          specsText: sku.specs.reduce((p, n) => `${p} ${n.name}：${n.valueName}`, '').trim()
+        })
+      } else {
+        emit('change', {})
+      }
+    }
+    return { clickSpecs }
+  }
+}
+</script>
+
+<style scoped lang="scss">
+@mixin sku-state-mixin {
+  border: 1px solid #e4e4e4;
+  margin-right: 10px;
+  cursor: pointer;
+
+  &.selected {
+    border-color: $xtxColor;
+  }
+
+  &.disabled {
+    opacity: 0.6;
+    border-style: dashed;
+    cursor: not-allowed;
+  }
+}
+
+.goods-sku {
+  padding-left: 10px;
+  padding-top: 20px;
+
+  dl {
+    display: flex;
+    padding-bottom: 20px;
+    align-items: center;
+
+    dt {
+      width: 50px;
+      color: #999;
+    }
+
+    dd {
+      flex: 1;
+      color: #666;
+
+      >img {
+        width: 50px;
+        height: 50px;
+        margin-bottom: 4px;
+        @include sku-state-mixin;
+      }
+
+      >span {
+        display: inline-block;
+        height: 30px;
+        line-height: 28px;
+        padding: 0 20px;
+        margin-bottom: 4px;
+        @include sku-state-mixin;
+      }
+    }
+  }
+}
+</style>
+```
+在XtxSku目录下新建相关的power-set.js
+```js
+
+export default function bwPowerSet (originalSet) {
+  const subSets = []
+
+  // We will have 2^n possible combinations (where n is a length of original set).
+  // It is because for every element of original set we will decide whether to include
+  // it or not (2 options for each set element).
+  const numberOfCombinations = 2 ** originalSet.length
+
+  // Each number in binary representation in a range from 0 to 2^n does exactly what we need:
+  // it shows by its bits (0 or 1) whether to include related element from the set or not.
+  // For example, for the set {1, 2, 3} the binary number of 0b010 would mean that we need to
+  // include only "2" to the current set.
+  for (let combinationIndex = 0; combinationIndex < numberOfCombinations; combinationIndex += 1) {
+    const subSet = []
+
+    for (let setElementIndex = 0; setElementIndex < originalSet.length; setElementIndex += 1) {
+      // Decide whether we need to include current element into the subset or not.
+      if (combinationIndex & (1 << setElementIndex)) {
+        subSet.push(originalSet[setElementIndex])
+      }
+    }
+
+    // Add current subset to the list of all subsets.
+    subSets.push(subSet)
+  }
+
+  return subSets
+}
+```
+
+在父组件src/views/Detail/index.vue中导入并使用,并将获取到的数据根据上下文以props对象方式传入`:goods="goods"`，并新建一个change方法用以接受sku组件的修改变化。
+
+
+```js
+
+<script setup>
+import XtxSku from '@/components/XtxSku/index.vue'
+
+// .... 以上内容不变
+
+// sku规格被操作时触发
+const skuChange = (sku)=>{
+  console.log(sku)
+}
+
+</script>
+
+<template>
+// .... 以上内容不变
+
+<!-- sku组件 -->
+<XtxSku  :goods="goods" @change="skuChange"/>
+
+// .... 一下内容不变
+</template>
+```
+
+#### 16.8 全局注册通用组件
+为了节省每次在使用通用组件时需要导入之后才能引用，这里将所有的通用组件统一处理，之后采用全局注册方式，这样在项目内任意位子就可以直接使用注册的组件了，就不需要麻烦的导入。
+
+在src/components/目录下新建index.js统一注册文件
+
+```js
+// 把components中的所有组件都进行全局化注册
+// 通过插件的方式
+import ImageView from './ImageView/index.vue'
+import Sku from './XtxSku/index.vue'
+
+export const componentPlugin = {
+  install(app){
+    // app.component('组件名称',组件配置对象)
+    app.component('XtxImageView',ImageView)
+    app.component('XtxSku',Sku)
+  }
+}
+```
+
+再在项目入口文件main.js中引入，并使用
+```js
+import { createApp } from "vue"
+import { createPinia } from "pinia"
+
+import App from "./App.vue"
+import router from "./router"
+
+// 引入初始化样式
+import "@/styles/common.scss"
+
+// 引入懒加载插件并注册
+import { lazyPlugin } from "@/directives/index"
+// 引入全局组件
+import { componentPlugin } from "./components/index"
+
+const app = createApp(App)
+
+app.use(createPinia())
+app.use(router);
+app.use(lazyPlugin)
+app.use(componentPlugin)
+app.mount("#app")
+```
+
+这样项目中使用到这2个通用组件的位子就不要引入了直接使用就行了
+```js
+// 例如sku组件，就需要再Detail组件中导入sku组件了，直接在对应需要使用的位子直接使用就行了，使用的名称必须和注册时编辑的名称一致
+<XtxSku  :goods="goods" @change="skuChange"/>
+
+```
+
+
+### 17 登录页
+
+#### 17.1 路由配置及静态页面搭建
+1. src/router/index.js中配置路由地址
+
+```js
+{
+  path:'/login',
+  component: Login,
+}
+```
+
+2. 静态页面搭建
+
+src/views/Login/index.vue
+
+```js
+<script setup>
+
+</script>
+
+
+<template>
+  <div>
+    <header class="login-header">
+      <div class="container m-top-20">
+        <h1 class="logo">
+          <RouterLink to="/">小兔鲜</RouterLink>
+        </h1>
+        <RouterLink class="entry" to="/">
+          进入网站首页
+          <i class="iconfont icon-angle-right"></i>
+          <i class="iconfont icon-angle-right"></i>
+        </RouterLink>
+      </div>
+    </header>
+    <section class="login-section">
+      <div class="wrapper">
+        <nav>
+          <a href="javascript:;">账户登录</a>
+        </nav>
+        <div class="account-box">
+          <div class="form">
+            <el-form label-position="right" label-width="60px"
+              status-icon>
+              <el-form-item  label="账户">
+                <el-input/>
+              </el-form-item>
+              <el-form-item label="密码">
+                <el-input/>
+              </el-form-item>
+              <el-form-item label-width="22px">
+                <el-checkbox  size="large">
+                  我已同意隐私条款和服务条款
+                </el-checkbox>
+              </el-form-item>
+              <el-button size="large" class="subBtn">点击登录</el-button>
+            </el-form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="login-footer">
+      <div class="container">
+        <p>
+          <a href="javascript:;">关于我们</a>
+          <a href="javascript:;">帮助中心</a>
+          <a href="javascript:;">售后服务</a>
+          <a href="javascript:;">配送与验收</a>
+          <a href="javascript:;">商务合作</a>
+          <a href="javascript:;">搜索推荐</a>
+          <a href="javascript:;">友情链接</a>
+        </p>
+        <p>CopyRight &copy; 小兔鲜儿</p>
+      </div>
+    </footer>
+  </div>
+</template>
+
+<style scoped lang='scss'>
+.login-header {
+  background: #fff;
+  border-bottom: 1px solid #e4e4e4;
+
+  .container {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+
+  .logo {
+    width: 200px;
+
+    a {
+      display: block;
+      height: 132px;
+      width: 100%;
+      text-indent: -9999px;
+      background: url("@/assets/images/logo.png") no-repeat center 18px / contain;
+    }
+  }
+
+  .sub {
+    flex: 1;
+    font-size: 24px;
+    font-weight: normal;
+    margin-bottom: 38px;
+    margin-left: 20px;
+    color: #666;
+  }
+
+  .entry {
+    width: 120px;
+    margin-bottom: 38px;
+    font-size: 16px;
+
+    i {
+      font-size: 14px;
+      color: $xtxColor;
+      letter-spacing: -5px;
+    }
+  }
+}
+
+.login-section {
+  background: url('@/assets/images/login-bg.png') no-repeat center / cover;
+  height: 488px;
+  position: relative;
+
+  .wrapper {
+    width: 380px;
+    background: #fff;
+    position: absolute;
+    left: 50%;
+    top: 54px;
+    transform: translate3d(100px, 0, 0);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+
+    nav {
+      font-size: 14px;
+      height: 55px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #f5f5f5;
+      display: flex;
+      padding: 0 40px;
+      text-align: right;
+      align-items: center;
+
+      a {
+        flex: 1;
+        line-height: 1;
+        display: inline-block;
+        font-size: 18px;
+        position: relative;
+        text-align: center;
+      }
+    }
+  }
+}
+
+.login-footer {
+  padding: 30px 0 50px;
+  background: #fff;
+
+  p {
+    text-align: center;
+    color: #999;
+    padding-top: 20px;
+
+    a {
+      line-height: 1;
+      padding: 0 10px;
+      color: #999;
+      display: inline-block;
+
+      ~a {
+        border-left: 1px solid #ccc;
+      }
+    }
+  }
+}
+
+.account-box {
+  .toggle {
+    padding: 15px 40px;
+    text-align: right;
+
+    a {
+      color: $xtxColor;
+
+      i {
+        font-size: 14px;
+      }
+    }
+  }
+
+  .form {
+    padding: 0 20px 20px 20px;
+
+    &-item {
+      margin-bottom: 28px;
+
+      .input {
+        position: relative;
+        height: 36px;
+
+        >i {
+          width: 34px;
+          height: 34px;
+          background: #cfcdcd;
+          color: #fff;
+          position: absolute;
+          left: 1px;
+          top: 1px;
+          text-align: center;
+          line-height: 34px;
+          font-size: 18px;
+        }
+
+        input {
+          padding-left: 44px;
+          border: 1px solid #cfcdcd;
+          height: 36px;
+          line-height: 36px;
+          width: 100%;
+
+          &.error {
+            border-color: $priceColor;
+          }
+
+          &.active,
+          &:focus {
+            border-color: $xtxColor;
+          }
+        }
+
+        .code {
+          position: absolute;
+          right: 1px;
+          top: 1px;
+          text-align: center;
+          line-height: 34px;
+          font-size: 14px;
+          background: #f5f5f5;
+          color: #666;
+          width: 90px;
+          height: 34px;
+          cursor: pointer;
+        }
+      }
+
+      >.error {
+        position: absolute;
+        font-size: 12px;
+        line-height: 28px;
+        color: $priceColor;
+
+        i {
+          font-size: 14px;
+          margin-right: 2px;
+        }
+      }
+    }
+
+    .agree {
+      a {
+        color: #069;
+      }
+    }
+
+    .btn {
+      display: block;
+      width: 100%;
+      height: 40px;
+      color: #fff;
+      text-align: center;
+      line-height: 40px;
+      background: $xtxColor;
+
+      &.disabled {
+        background: #cfcdcd;
+      }
+    }
+  }
+
+  .action {
+    padding: 20px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .url {
+      a {
+        color: #999;
+        margin-left: 10px;
+      }
+    }
+  }
+}
+
+.subBtn {
+  background: $xtxColor;
+  width: 100%;
+  color: #fff;
+}
+</style>
+```
+
+在浏览器中直接修改地址，添加/login访问查看一下是否正常显示
+
+下一步需要修改一下Layout页面的LayoutNav.vue组件中负责登陆控制的位子
+可以看到改位置是一个多模板结构，通过v-if 和 v-else控制登陆和非登录状态
+这里将静态结构的`v-if="true"`改为`false`。并给非登录状态下的请先登录按钮添加一个点击事件跳转到登陆页`@click="$router.push('/login')"`
+
+```js
+<template v-if="false">
+  <li><a href="javascript:;"><i class="iconfont icon-user"></i>周杰伦</a></li>
+  <li>
+    <el-popconfirm title="确认退出吗?" confirm-button-text="确认" cancel-button-text="取消">
+      <template #reference>
+        <a href="javascript:;">退出登录</a>
+      </template>
+    </el-popconfirm>
+  </li>
+  <li><a href="javascript:;">我的订单</a></li>
+  <li><a href="javascript:;">会员中心</a></li>
+</template>
+<template v-else>
+  <li><a href="javascript:;" @click="$router.push('/login')">请先登录</a></li>
+  <li><a href="javascript:;">帮助中心</a></li>
+  <li><a href="javascript:;">关于我们</a></li>
+</template>
+```
+
+
+
