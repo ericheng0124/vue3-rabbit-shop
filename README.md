@@ -5065,4 +5065,144 @@ src/views/Login/index.vue
 ```
 
 
+#### 17.2 登录页的表单数据验证
+
+表单效验步骤：
+1. 按照接口字段准备表单对象并绑定
+
+2. 按照产品要求准备规则对象并绑定
+
+3. 指定表单域的效验字段名
+
+4. 把表单对象进行双向绑定
+
+验证规则：
+用户名：不能为空，字段名为 account
+密码：不能为空且6-14个字符，字段名为 password
+同意协议：必选，字段名为 agree
+
+
+根据Element-Plus文档可知Form表单校验功能分别对应
+el-form（绑定表单对象和规则参数）
+el-form-item（绑定使用规则字段）
+el-input（双向绑定表单数据）
+
+```js
+<script setup>
+
+
+// 表单校验（账号名 + 密码）
+import { ref } from 'vue'
+
+// 1. 准备表单对象
+const formData = ref({
+  account:'', // 用户名
+  password:'' // 密码
+})
+
+const rules = {
+  account:[
+    {required:true,message:'用户名不能为空',trigger:'blur'}
+  ],
+  password:[
+    {required:true,message:'密码不能为空',trigger:'blur'},
+    {min:6,max:14,message:'密码长度为6-14个字符',trigger:'blur'}
+  ]
+}
+
+</script>
+
+<template>
+// ... 以上内容不变
+
+<el-form :model="formData" :rules="rules" label-position="right" label-width="60px" status-icon>
+  <el-form-item  label="账户" prop="account">
+    <el-input v-model="formData.account"/>
+  </el-form-item>
+  <el-form-item label="密码" prop="password">
+    <el-input v-model="formData.password"/>
+  </el-form-item>
+  <el-form-item label-width="22px">
+    <el-checkbox  size="large">
+      我已同意隐私条款和服务条款
+    </el-checkbox>
+  </el-form-item>
+  <el-button size="large" class="subBtn">点击登录</el-button>
+</el-form>
+
+// ... 以下内容不变
+</template>
+```
+
+自定义效验规则
+
+ElementPlus表单组件内置了出事的效验配置，应对简单的效验规则通过配置即可，如果想要定制一些特殊的效验需求，可以使用自定义效验规则，如格式如下：
+```js
+{
+  validator:(rule,value,callback)=>{
+    // rule：自定义效验逻辑
+    // value：当前输入的数据
+    // callback：效验处理函数 效验通过时调用
+  }
+}
+```
+同意框的校验要求：
+如果勾选了协议框，通过效验，如果没有勾选，不通过效验
+
+
+```js
+// 1. 准备表单对象
+const formData = ref({
+  account:'', // 用户名
+  password:'', // 密码
+  agree:false
+})
+
+const rules = {
+  account:[
+    {required:true,message:'用户名不能为空',trigger:'blur'}
+  ],
+  password:[
+    {required:true,message:'密码不能为空',trigger:'blur'},
+    {min:6,max:14,message:'密码长度为6-14个字符',trigger:'blur'}
+  ],
+  agree:[
+    // 2.自定义表单效验
+    {
+      validator:(rule,value,callback)=>{
+        // console.log(rule,value)
+        // 自定义校验逻辑
+        // 勾选表示用过，不勾选表示不通过
+        if(value){
+          callback()
+        }else{
+          callback(new Error('请勾选协议'))
+        }
+      }
+    }
+  ]
+}
+```
+
+如果直接点击登录按钮不输入任何数据，这样就不会出发验证，这里我们通过表单的统一效验实现
+```js
+// 3. 获取form实例做统一效验
+const formRef = ref(null)
+
+const login = ()=>{
+  // 调用实例方法
+  formRef.value.validate((valid)=>{
+    // valid：所有表单都通过效验，才为true
+    // console.log(valid)
+    // 以参数作为判断条件
+    if(valid){
+      // do login
+      
+    }
+  })
+}
+
+```
+
+
 
