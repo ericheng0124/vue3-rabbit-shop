@@ -5287,7 +5287,7 @@ import { ElMessage } from 'element-plus'
 // axios响应式拦截器
 httpInstance.interceptors.response.use(response => {
   // 2xx 范围内的状态码都会触发该函数。
-  // 对响应数据做点什么
+  // 对响应数据做点什么 
   return response.data
 }, error => {
   // 超出 2xx 范围的状态码都会触发该函数。
@@ -5303,4 +5303,71 @@ httpInstance.interceptors.response.use(response => {
 })
 ```
 
+#### 17.4 登陆-Pinia管理用户数据
 
+因为用户数据在多个业务场景中都需要用到，所以这里我们将共享数据采用Pinia集中管理更方便
+
+**使用Pinia管理数据**
+
+`遵循理念：和数据相关的所有操作（state，action）都放到Pinia中，组件只负责出发aciton函数`
+
+
+在stores中新建user模块
+
+src/stores/user.js
+
+```js
+import { defineStore } from "pinia"
+import { ref } from "vue"
+import { loginAPI } from "@/apis/user"
+
+export const useUserStore = defineStore('user',()=>{
+  // 1. 定义管理用户数据的state
+  const userInfo = ref({})
+  // 2. 定义获取接口数据的action函数
+  const getUserInfo = async({account,password})=>{
+    const res = await loginAPI({account,password})
+    userInfo.value = res.result
+  }
+  // 3. 以对象格式将state和action return
+  return {
+    userInfo,
+    getUserInfo
+  }
+})
+```
+
+在登陆页中引入并调用action存入相应用户信息
+
+```js
+import { useUserStore } from '@/stores/user'
+
+const userStore = useUserStore()
+
+```
+
+```js
+// 登陆方法
+const login = ()=>{
+  const {account,password} = formData.value
+  // 调用实例方法
+  formRef.value.validate(async(valid)=>{
+    // valid：所有表单都通过效验，才为true
+    // console.log(valid)
+    // 以参数作为判断条件
+    if(valid){
+      // do login
+      // const res = await loginAPI({account,password})
+      await userStore.getUserInfo({account,password})
+      // console.log(res)
+      // 提示用户
+      ElMessage({
+        type:'success',
+        message:'登陆成功'
+      })
+      // 跳转首页
+      router.replace('/')
+    }
+  })
+}
+```

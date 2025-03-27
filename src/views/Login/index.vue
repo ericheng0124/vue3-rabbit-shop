@@ -1,8 +1,12 @@
 <script setup>
-import {loginAPI} from '@/apis/user'
+// import {loginAPI} from '@/apis/user'
 import 'element-plus/theme-chalk/el-message.css'
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
+
+import { useUserStore } from '@/stores/user'
+
+const userStore = useUserStore()
 
 
 // 表单校验（账号名 + 密码）
@@ -11,9 +15,9 @@ import { ref } from 'vue'
 
 // 1. 准备表单对象
 const formData = ref({
-  account:'', // 用户名
-  password:'', // 密码
-  agree:false
+  account:'xiaotuxian001', // 用户名
+  password:'123456', // 密码
+  agree:true
 })
 
 const rules = {
@@ -55,7 +59,8 @@ const login = ()=>{
     // 以参数作为判断条件
     if(valid){
       // do login
-      const res = await loginAPI({account,password})
+      // const res = await loginAPI({account,password})
+      await userStore.getUserInfo({account,password})
       // console.log(res)
       // 提示用户
       ElMessage({
