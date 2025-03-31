@@ -5601,3 +5601,80 @@ const confirm = ()=>{
   // ...以下代码不变
 </template>
 ```
+
+
+#### 17.9 登陆-token失效401拦截
+
+**token的有效性可以保持一段时间，如果用户一段时间内不做任何操作，token就会失效，使用失效的token再去请求一些皆苦，接口就会报401错误码，需要我们做额外处理**
+
+`为了能确认用户到底是在访问哪个接口时出现的401错误，所以我们在拦截器的位子做401错误处理，这里具体是在响应拦截器中做`
+
+`检测到401之后，意味着token失效了，老的token失效就是非登录状态，需要跳回到登陆页`
+
+解决方案：
+- 在Axios响应拦截器中统一处理
+
+1. 在失败的回调中拦截401错误
+
+2. 清除掉过期的用户信息，再跳转到登录页。
+
+src/utils/http.js
+
+```js
+// axios基础的封装
+import axios from "axios"
+import 'element-plus/theme-chalk/el-message.css'
+import { ElMessage } from 'element-plus'
+import { useUserStore } from "@/stores/user"
+import router from "@/router"
+
+const httpInstance = axios.create({
+  // 项目基础地址
+  baseURL: "http://pcapi-xiaotuxian-front-devtest.itheima.net",
+  // 请求超时时间
+  timeout: 5000,
+})
+
+// 拦截器
+// axios请求拦截器
+httpInstance.interceptors.request.use(config => {
+  // 在发送请求之前做些什么
+  // 1.从pinia中获取token数据
+  const userStore = useUserStore()
+  const token = userStore.userInfo.token
+  // 2.按照后端要求拼接token数据到请求头中
+  if(token){
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+}, error => {
+  // 对请求错误做些什么
+  return Promise.reject(error)
+})
+
+// axios响应式拦截器
+httpInstance.interceptors.response.use(response => {
+  // 2xx 范围内的状态码都会触发该函数。
+  // 对响应数据做点什么
+  return response.data
+}, e => {
+  const userStore = useUserStore()
+  // 超出 2xx 范围的状态码都会触发该函数。
+  // 对响应错误做点什么
+  // 统一错误提示
+  ElMessage({
+    type:'warning',
+    message:e.response.data.message
+  })
+  // 401 token失效处理
+  if(e.response.status === 401){
+    // 1. 清除本地用户信息
+    userStore.clearUserInfo()
+    // 2. 跳转到登录页
+    router.push('/login')
+  }
+  return Promise.reject(e)
+})
+
+export default httpInstance
+```
