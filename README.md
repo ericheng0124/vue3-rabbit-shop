@@ -5678,3 +5678,103 @@ httpInstance.interceptors.response.use(response => {
 
 export default httpInstance
 ```
+
+#### 18 购物车模块
+
+购物车业务逻辑梳理拆解
+
+购物车操作（加/删/单选/全选...）-> 是否登陆判断 
+未登陆：本地购物车操作（所有操作不走接口直接操作Pinia中的本地购物车列表）
+
+已登录：接口购物车操作（所有操作都走接口，操作完毕获取购物车列表更新本地购物车列表）
+
+1. 整个购物车的实现分为两个大分支，本地购物车操作和接口购物车操作。
+2. 由于购物车数据的特殊性，采用oinia管理购物车列表数据并添加持久化缓存。
+
+#### 18.1 本地购物车 - 加入购物车实现
+
+步骤：
+
+封装cartStore(state + action) --> 组件点击了添加按钮 --> 判断是否选择了规格 --> 选择了 --> 调用action添加（传递商品参数）--> 添加过：原count+1
+                                                                     --> 未选择 --> 提示用户选择规格             --> 未添加：直接push
+
+
+src/views/Detail/index.vue
+
+```js
+<script setup>
+import { useCartStore } from '@/stores/cart'
+
+const cartStore = useCartStore()
+
+// count:购物车商品数量
+const count = ref(1)
+
+// 修改数量的方法
+const countChange = (count)=>{
+  console.log(count)
+}
+
+// 添加购物车
+const addCart = ()=>{
+  if(skuObj.skuId){
+    // 规格已全部选择 触发action
+    cartStore.addCart({
+      id:goods.value.id, // 商品ID
+      name:goods.value.name, // 商品名称
+      picture:goods.value.mainPictures[0], // 图片
+      price:goods.value.price, // 最新价格
+      count:count.value, // 商品数量
+      skuId:skuObj.skuId, // skuId
+      attrsText:skuObj.specsText, // 商品规格文本
+      select:true // 商品是否选中
+    })
+  }else{
+    // 规格未选择全 提示用户
+    ElMessage.warning('请选择规格！')
+  }
+}
+</script>
+
+<template>
+  // ...以上数据不变
+  <!-- 数据组件 -->
+  <el-input-number v-model="count" @change="countChange" :min="0" />
+  // ...以下数据不变
+</template>
+
+```
+
+
+src/stores/cart.js
+
+```js
+// 封装购物车模块
+
+import { defineStore } from "pinia"
+import { ref } from "vue"
+
+export const useCartStore = defineStore('cart',()=>{
+  // 1. 定义state
+  const cartList = ref([])
+  // 2. 定义action - addCart
+  const addCart = (goods)=>{
+    // 添加购物车操作编写逻辑
+    // 已添加过：count + 1 ，未添加过：push
+    // 思路：通过匹配传递过来的skuId是否能在cartList中找到，找到了表示添加过反之则未添加过
+    const item = cartList.value.find((item)=>goods.skuId === item.skuId)
+    if(item){
+      // 找到了
+      item.count++
+    }else{
+      cartList.value.push(goods)
+    }
+  }
+  // 3. retrun 出去所有的state和action
+  return {
+    cartList,
+    addCart
+  }
+})
+```
+
