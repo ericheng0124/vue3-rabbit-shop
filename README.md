@@ -5472,3 +5472,45 @@ const userStore = useUserStore()
   </nav>
 </template>
 ```
+
+#### 17.7 请求拦截器携带token
+`为什么要在请求拦截器中携带token`
+Token作为用户标识，在很多个接口中都需要携带Token才可以正确获取数据，所以需要在接口调用时携带Token，另外，为了统一控制采取请求拦截器携带的方案。
+
+`如何配置`
+
+Axios请求拦截器可以在接口真是发起之前对请求参数做一些事情，通常Token数据会在此时注入到请求header中，格式按照后端要求的格式进行拼接处理。
+样例：
+```js
+instance.interceptors.request.use(config=>{
+  const userStore = useUserStore()
+  const token = userStore.userInfo.token
+  if(token){
+    config.header.Authorization = `Bearer ${token}`
+  }
+  return config
+},error=>Promise.reject(error))
+```
+
+本项目中实现
+src/utils/http.js
+```js
+import { useUserStore } from "@/stores/user"
+
+// 拦截器
+// axios请求拦截器
+httpInstance.interceptors.request.use(config => {
+  // 在发送请求之前做些什么
+  // 1.从pinia中获取token数据
+  const userStore = useUserStore()
+  const token = userStore.userInfo.token
+  // 2.按照后端要求拼接token数据到请求头中
+  if(token){
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+}, error => {
+  // 对请求错误做些什么
+  return Promise.reject(error)
+})
+```
