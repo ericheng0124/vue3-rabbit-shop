@@ -5514,3 +5514,52 @@ httpInstance.interceptors.request.use(config => {
   return Promise.reject(error)
 })
 ```
+
+
+#### 17.8 退出登陆功能实现
+
+实现步骤：
+1. 点击退出登陆，弹出确认框
+      - 这里使用elementPlus的el-popconfirm 气泡确认框组件
+
+2. 点击确定按钮实现退出登陆逻辑
+    退出登陆逻辑包括：
+      - 1. 清除当前用户信息
+      - 2. 跳转到登陆页面
+
+src/views/Layout/components/LayoutNav.vue
+
+```js
+
+<script setup>
+import { useUserStore } from '@/stores/user'
+
+import { useRouter } from 'vue-router'
+
+const userStore = useUserStore()
+
+const router = useRouter()
+
+const confirm = ()=>{
+  // console.log('点击了确认')
+  // 退出登陆业务逻辑实现
+  // 1. 清除当前用户信息 触发action
+  userStore.clearUserInfo()
+  // 2. 跳转到登陆页面
+  router.push('/login')
+}
+
+
+</script>
+
+<template>
+  // ...以上代码不变
+  // 根据elementplus文档 可知 el-popfirm组件有一个confirm事件用于触发点击确认
+  <el-popconfirm title="确认退出吗?" @confirm="confirm" confirm-button-text="确认" cancel-button-text="取消">
+    <template #reference>
+      <a href="javascript:;">退出登录</a>
+    </template>
+  </el-popconfirm>
+  // ...以下代码不变
+</template>
+```
