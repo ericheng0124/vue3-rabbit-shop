@@ -5371,3 +5371,66 @@ const login = ()=>{
   })
 }
 ```
+
+#### 17.5 持久化用户数据
+
+1. 用户数据中有一个关键的数据叫Token（用来标识用户是否登陆），而Token持续一段时间才会过期。
+2. Pinia的存储是基于内存的，刷新就丢失，为了保持登陆状态就要做到刷新而不丢失，需要配合持久化进行存储。
+
+目的：保持token不丢失，保持登陆状态。
+
+最终效果：操作state时会自动把用户数据在本地的localStorage也存一份，刷新的时候会从localStorage中先取如果取到了就使用里面的数据，如果取不到在初始化为空解决刷新问题。
+
+这里为了方便使用Pinia插件`pinia-plugin-persistedstate`适用于Pinia的持久化存储插件。
+
+
+- 安装插件
+```cmd
+pnpm add pinia-plugin-persistedstate
+```
+
+- 将插件添加到你的 pinia 实例中
+在入口文件src/main.js中
+```js
+import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
+// 生成实例
+const pinia = createPinia()
+// 实例使用
+pinia.use(piniaPluginPersistedstate)
+// 绑定使用实例
+app.use(pinia)
+```
+
+- 用法（参考官方文档 https://prazdevs.github.io/pinia-plugin-persistedstate/zh/guide/）
+
+在声明您的store时，请将新persist选项设置为 true。
+src/stores/user.js
+```js
+import { defineStore } from "pinia"
+import { ref } from "vue"
+import { loginAPI } from "@/apis/user"
+
+export const useUserStore = defineStore(
+  "user",
+  () => {
+    // 1. 定义管理用户数据的state
+    const userInfo = ref({})
+    // 2. 定义获取接口数据的action函数
+    const getUserInfo = async ({ account, password }) => {
+      const res = await loginAPI({ account, password })
+      userInfo.value = res.result
+    }
+    // 3. 以对象格式将state和action return
+    return {
+      userInfo,
+      getUserInfo,
+    }
+  },
+  {
+    persist: true,
+  }
+)
+```
+
+#### 17.6 登陆和非登录状态下的模板适配
+
