@@ -3,6 +3,7 @@ import axios from "axios"
 import 'element-plus/theme-chalk/el-message.css'
 import { ElMessage } from 'element-plus'
 
+
 const httpInstance = axios.create({
   // 项目基础地址
   baseURL: "http://pcapi-xiaotuxian-front-devtest.itheima.net",
@@ -14,6 +15,7 @@ const httpInstance = axios.create({
 // axios请求拦截器
 httpInstance.interceptors.request.use(config => {
   // 在发送请求之前做些什么
+
   return config
 }, error => {
   // 对请求错误做些什么
