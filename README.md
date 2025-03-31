@@ -5778,7 +5778,7 @@ export const useCartStore = defineStore('cart',()=>{
 })
 ```
 
-#### 18.2 头部购物车-列表渲染
+#### 18.2 本地购物车 头部购物车-列表渲染
 新建头部购物侧组件
 src/views/Layout/components/HeaderCart.vue
 
@@ -6016,4 +6016,25 @@ import HeaderCart from './HeaderCart.vue';
 
 <!-- 头部购物车 -->
 <HeaderCart />
+```
+
+
+#### 18.3 本地购物车 头部购物车删除实现
+实现思路：
+1. 编写删除的action函数，实现数据删除逻辑
+
+2. 组件中调用action并传递skuId
+
+src/stores/cart.js
+```js
+// 删除购物车
+const delCart = (skuId)=>{
+  // 思路：
+  // 1. 找到要删除的商品在列表中的下标值 - splice
+  // const idx = cartList.value.findIndex(item=>skuId === item.skuId)
+  // cartList.value.splice(idx,1)
+  // 2. 使用数组的过滤方法 - filter
+  const newList = cartList.value.filter(item=>skuId !== item.skuId)
+  cartList.value = newList
+}
 ```
