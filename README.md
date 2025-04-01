@@ -6038,3 +6038,28 @@ const delCart = (skuId)=>{
   cartList.value = newList
 }
 ```
+
+
+#### 18.4 本地购物车 - 头部购物车统计计算
+
+使用`计算属性`来实现
+
+计算逻辑：
+1. 商品总数计算逻辑：商品列表中的所有商品`count`累加之和。
+2. 商品总价钱计算逻辑：商品列表中的所有商品的`count * price`累加之和
+
+src/stores/cart.js
+
+```js
+// 计算属性
+// 1. 总数量 所有项的count之和
+const allCount = computed(()=>cartList.value.reduce((a,c)=>a + c.count,0))
+// 2. 总价 所有项的count*price之和
+const allPirce = computed(()=>cartList.value.reduce((a,c)=>a+c.count*c.price,0))
+
+return {
+  allCount,
+  allPirce
+}
+```
+在src/views/Layout/components/HeaderCart.vue组件中直接使用就好了

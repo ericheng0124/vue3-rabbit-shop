@@ -1,7 +1,7 @@
 // 封装购物车模块
 
 import { defineStore } from "pinia"
-import { ref } from "vue"
+import { ref,computed } from "vue"
 
 export const useCartStore = defineStore('cart',()=>{
   // 1. 定义state
@@ -30,10 +30,17 @@ export const useCartStore = defineStore('cart',()=>{
     cartList.value = newList
   }
 
+  // 计算属性
+  // 1. 总数量 所有项的count之和
+  const allCount = computed(()=>cartList.value.reduce((a,c)=>a + c.count,0))
+  // 2. 总价 所有项的count*price之和
+  const allPirce = computed(()=>cartList.value.reduce((a,c)=>a+c.count*c.price,0))
   // 3. retrun 出去所有的state和action
   return {
     cartList,
     addCart,
-    delCart
+    delCart,
+    allCount,
+    allPirce
   }
 })
