@@ -6217,3 +6217,28 @@ const delCart = async(skuId)=>{
   }
 }
 ```
+
+
+#### 18.7 退出登陆时清空购物车信息
+
+在用户退出登陆时清空购物车列表
+
+在cartStore内新建清空购物车的action
+
+```js
+// 清空购物车action
+const clearCart = ()=>{
+  cartList.value = []
+}  
+```
+
+在userStore的退出登陆action中调用清空购物车的action
+
+```js
+// 退出时清除用户信息
+const clearUserInfo = () => {
+  userInfo.value = {}
+  // 执行清除购物车的action
+  cartStore.clearCart()
+}
+```
