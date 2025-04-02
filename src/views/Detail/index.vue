@@ -5,7 +5,7 @@ import { ref,onMounted } from 'vue'
 import DetailHot from './components/DetailHot.vue'
 // import ImageView from '@/components/ImageView/index.vue'
 // import XtxSku from '@/components/XtxSku/index.vue'
-import { useCartStore } from '@/stores/cart'
+import { useCartStore } from '@/stores/cartStore'
 
 const cartStore = useCartStore()
 
@@ -427,4 +427,4 @@ const addCart = ()=>{
 .bread-container {
   padding: 25px 0;
 }
-</style>
+</style>@/stores/cartStore

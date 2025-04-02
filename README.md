@@ -6162,3 +6162,58 @@ export const useCartStore = defineStore('cart',()=>{
 })
 ```
 
+#### 18.6 接口购物车删除功能&小优化
+
+封装删除接口购物车api
+
+src/apis/cart.js
+
+```js
+// 删除购物车
+export const delCartListAPI = (ids)=>{
+  return request({
+    url:'/member/cart',
+    method:'DELETE',
+    data:{
+      ids
+    }
+  })
+}
+```
+
+添加删除接口购物车action，并优化更新购物车列表，提取封装为一个action
+
+src/stores/cartStore.js
+
+```js
+// 获取最新购物车列表action
+const updateNewList = async()=>{
+  // 获取最新的购物车列表
+  const res = await findNewCartListAPI()
+  // 覆盖本地购物车列表
+  cartList.value = res.result
+}
+
+
+// 删除购物车
+const delCart = async(skuId)=>{
+  if(isLogin.value){
+    // 登陆
+    await delCartListAPI([skuId])
+    // // 获取最新的购物车列表
+    // const res = await findNewCartListAPI()
+    // // 覆盖本地购物车列表
+    // cartList.value = res.result
+    updateNewList()
+  }else{
+    // 未登录，走本地
+    // 思路：
+    // 1. 找到要删除的商品在列表中的下标值 - splice
+    // const idx = cartList.value.findIndex(item=>skuId === item.skuId)
+    // cartList.value.splice(idx,1)
+    // 2. 使用数组的过滤方法 - filter
+    const newList = cartList.value.filter(item=>skuId !== item.skuId)
+    cartList.value = newList
+  }
+}
+```

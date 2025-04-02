@@ -1,7 +1,7 @@
 <script setup>
 // vueUse
 import { useScroll } from '@vueuse/core'
-import { useCategoryStore } from '@/stores/category'
+import { useCategoryStore } from '@/stores/categoryStore'
 
 
 // 获取滚动高度
@@ -115,3 +115,4 @@ const categoryStore = useCategoryStore()
   }
 }
 </style>
+@/stores/categoryStore
