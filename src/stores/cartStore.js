@@ -93,6 +93,10 @@ export const useCartStore = defineStore('cart',()=>{
   const allPirce = computed(()=>cartList.value.reduce((a,c)=>a+c.count*c.price,0))
   // 3. 全选功能
   const isAll = computed(()=>cartList.value.every(item=>item.selected))
+  // 4. 选中的商品数量
+  const selectedCount = computed(()=>cartList.value.filter(item=>item.selected).reduce((int,cur)=>int+cur.count,0))
+  // 5. 选中的商品总价
+  const selectedPrice = computed(()=>cartList.value.filter(item=>item.selected).reduce((int,cur)=>int+cur.count*cur.price,0))
 
 
   // 3. retrun 出去所有的state和action
@@ -106,7 +110,9 @@ export const useCartStore = defineStore('cart',()=>{
     clearCart,
     singCheck,
     isAll,
-    allCheck
+    allCheck,
+    selectedCount,
+    selectedPrice
   }
 },{
   persist:true

@@ -6376,6 +6376,29 @@ const allCheck = (selected)=>{
 ```
 
 
+#### 18.8 列表购物车-统计数据
+
+计算逻辑：
+1. 已选择数量 = cartList中所有selected字段为true项的count之和。
+2. 商品合计 = cartList中所有selected字段为true项的count * price 之和。
+
+在src/stores/cartStore.js
+
+```js
+// 4. 选中的商品数量
+const selectedCount = computed(()=>cartList.value.filter(item=>item.selected).reduce((int,cur)=>int+cur.count,0))
+// 5. 选中的商品总价
+const selectedPrice = computed(()=>cartList.value.filter(item=>item.selected).reduce((int,cur)=>int+cur.count*cur.price,0))
+```
+
+在模板中直接使用
+```js
+<div class="batch">
+  共 {{cartStore.allCount}} 件商品，已选择 {{ cartStore.selectedCount }} 件，商品合计：
+  <span class="red">¥ {{ cartStore.selectedPrice.toFixed(2) }} </span>
+</div>
+```
+
 
 #### 18.9 接口购物车 - 加入购物车
 
