@@ -3,6 +3,13 @@ import { useCartStore } from '@/stores/cartStore'
 
 const cartStore = useCartStore()
 
+// 单选回调
+const singleCheck = (i,selected)=>{
+  console.log(i,selected)
+  // 除了selected还需要补充一个用来筛选的参数（cartlist是一个数组，需要知道是谁需要修改选中和未选中）-> skuId
+  cartStore.singCheck(i.skuId,selected)
+}
+
 </script>
 
 <template>
@@ -26,7 +33,8 @@ const cartStore = useCartStore()
           <tbody>
             <tr v-for="i in cartStore.cartList" :key="i.id">
               <td>
-                <el-checkbox />
+                <!-- 单选框 -->
+                <el-checkbox :model-value="i.selected" @change="(selected)=>singleCheck(i,selected)"/>
               </td>
               <td>
                 <div class="goods">
@@ -73,7 +81,7 @@ const cartStore = useCartStore()
       <!-- 操作栏 -->
       <div class="action">
         <div class="batch">
-          共 10 件商品，已选择 2 件，商品合计：
+          共 {{cartStore.allCount}} 件商品，已选择 2 件，商品合计：
           <span class="red">¥ 200.00 </span>
         </div>
         <div class="total">

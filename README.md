@@ -5776,6 +5776,8 @@ export const useCartStore = defineStore('cart',()=>{
     cartList,
     addCart
   }
+},{
+  persist:true
 })
 ```
 
@@ -6303,6 +6305,44 @@ src/Layout/components/HeaderCart.vue
 ```js
 <el-button size="large" type="primary" @click="$router.push('/cartlist')" >去购物车结算</el-button>
 ```
+
+#### 18.6 本地列表购物车-单选功能
+
+核心思路：单选的核心思路就是使用保持把单选框的状态和pinia中store对应的状态保持同步
+
+注意事项：v-model双向绑定指令不方便进行命令式的操作（因为后续还需要调用接口），所以把v-model回退到一半模式，也就是`:model-value`和`@change`的配合实现。
+
+pinia(store) --(使用store渲染单选框)--> <el-checkbox :model-value="store" @change='cb' /> --(单选框切换时修改store中对应的状态)--> pinia(store)
+
+
+给checkbox组件添加一个change事件，来捕获是否勾选了
+
+src/views/CartList/index.vue
+
+```js
+<el-checkbox :model-value="i.selected" @change="(selected)=>singleCheck(i,selected)"/>
+```
+
+创建相应的回调函数
+```js
+// 单选回调
+const singleCheck = (i,selected)=>{
+  console.log(i,selected)
+  // 除了selected还需要补充一个用来筛选的参数（cartlist是一个数组，需要知道是谁需要修改选中和未选中）-> skuId
+  cartStore.singCheck(i.skuId,selected)
+}
+```
+
+pinia中对应的cartStore创建相应的单选action
+
+```js
+// 单选功能
+const singCheck = (skuId,selected)=>{
+  // 通过skuId找到需要修改的商品 然后将selected字段修改为传过来的值
+  cartList.value.find(item=>item.skuId === skuId).selected = selected
+}
+```
+
 
 
 
