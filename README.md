@@ -6344,6 +6344,36 @@ const singCheck = (skuId,selected)=>{
 ```
 
 
+#### 18.7 本地购物车-列表购物车-全选
+
+核心思路：
+1. 操作单选决定全选：只有当cartList中所有项目都为true时，全选状态才为true。
+2. 操作全选决定单选：cartList中的所有选项的selected都要跟着一起改变。
+
+pinia中添加一个isAll计算属性，当cartList中的所有selected都为true时，isAll才为true
+将全选框的checkbox通过`:model-value="isAll" @change="cb"`
+
+添加一个isAll的计算属性，用来控制全选按钮状态
+src/stores/cartStore.js
+```js
+// 3. 全选功能
+const isAll = computed(()=>cartList.value.every(item=>item.selected))
+```
+
+添加一个action 绑定给全选按钮，用来控制单选状态
+```js
+// 全选功能
+const allCheck = (selected)=>{
+  // 遍历cartList，修改每一项的selected属性
+  cartList.value.forEach(item=>item.selected = selected)
+}
+```
+
+将这个action和计算属性都绑定给页面的全选按钮
+```js
+<!-- 全选框 -->
+<el-checkbox :model-value="cartStore.isAll" @change="cartStore.allCheck"/>
+```
 
 
 

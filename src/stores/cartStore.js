@@ -79,11 +79,22 @@ export const useCartStore = defineStore('cart',()=>{
     cartList.value.find(item=>item.skuId === skuId).selected = selected
   }
 
+  // 全选功能
+  const allCheck = (selected)=>{
+    // 遍历cartList，修改每一项的selected属性
+    cartList.value.forEach(item=>item.selected = selected)
+  }
+  
+
   // 计算属性
   // 1. 总数量 所有项的count之和
   const allCount = computed(()=>cartList.value.reduce((a,c)=>a + c.count,0))
   // 2. 总价 所有项的count*price之和
   const allPirce = computed(()=>cartList.value.reduce((a,c)=>a+c.count*c.price,0))
+  // 3. 全选功能
+  const isAll = computed(()=>cartList.value.every(item=>item.selected))
+
+
   // 3. retrun 出去所有的state和action
   return {
     cartList,
@@ -93,7 +104,9 @@ export const useCartStore = defineStore('cart',()=>{
     allPirce,
     updateNewList,
     clearCart,
-    singCheck
+    singCheck,
+    isAll,
+    allCheck
   }
 },{
   persist:true
