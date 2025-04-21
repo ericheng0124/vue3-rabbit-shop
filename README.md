@@ -7079,3 +7079,250 @@ const showDialog = ref(false)
 </el-dialog>
 ```
 
+地址激活交互实现
+
+**原理：地址切换是我们经常遇到的`tab切换类`需求，这类需求的实现逻辑都是相似的**
+- 1. 点击时记录一个当前激活地址对象activeAddress，点击哪个地址就把哪个地址对象记录下来
+- 2. 通过动态类名`:class`控制激活样式类型`active`是否存在，为判断条件：激活地址对象的id === 当前项id
+
+```js
+// 切换地址
+const activeAddress = ref({})
+
+const switchAddress = (item)=>{
+  activeAddress.value = item
+}
+
+const confirm = ()=>{
+  curAddress.value = activeAddress.value
+  showDialog.value = false
+  const activeAddress = ref({})
+}
+
+
+ <!-- 切换地址 -->
+<el-dialog v-model="showDialog" title="切换收货地址" width="30%" center>
+  <div class="addressWrapper">
+    <div class="text item" :class="{active: activeAddress.id === item.id}" @click="switchAddress(item)" v-for="item in checkInfo.userAddresses"  :key="item.id">
+      <ul>
+      <li><span>收<i />货<i />人：</span>{{ item.receiver }} </li>
+      <li><span>联系方式：</span>{{ item.contact }}</li>
+      <li><span>收货地址：</span>{{ item.fullLocation + item.address }}</li>
+      </ul>
+    </div>
+  </div>
+  <template #footer>
+    <span class="dialog-footer">
+      <el-button>取消</el-button>
+      <el-button type="primary" @click="confirm">确定</el-button>
+    </span>
+  </template>
+</el-dialog>
+
+
+```
+
+#### 19.3 结算页面 - 生成订单
+
+新建订单结算页静态文件
+src/views/Pay/index.vue
+
+```js
+<script setup>
+const payInfo = {}
+
+</script>
+
+
+<template>
+  <div class="xtx-pay-page">
+    <div class="container">
+      <!-- 付款信息 -->
+      <div class="pay-info">
+        <span class="icon iconfont icon-queren2"></span>
+        <div class="tip">
+          <p>订单提交成功！请尽快完成支付。</p>
+          <p>支付还剩 <span>24分30秒</span>, 超时后将取消订单</p>
+        </div>
+        <div class="amount">
+          <span>应付总额：</span>
+          <span>¥{{ payInfo.payMoney?.toFixed(2) }}</span>
+        </div>
+      </div>
+      <!-- 付款方式 -->
+      <div class="pay-type">
+        <p class="head">选择以下支付方式付款</p>
+        <div class="item">
+          <p>支付平台</p>
+          <a class="btn wx" href="javascript:;"></a>
+          <a class="btn alipay" :href="payUrl"></a>
+        </div>
+        <div class="item">
+          <p>支付方式</p>
+          <a class="btn" href="javascript:;">招商银行</a>
+          <a class="btn" href="javascript:;">工商银行</a>
+          <a class="btn" href="javascript:;">建设银行</a>
+          <a class="btn" href="javascript:;">农业银行</a>
+          <a class="btn" href="javascript:;">交通银行</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped lang="scss">
+.xtx-pay-page {
+  margin-top: 20px;
+}
+
+.pay-info {
+
+  background: #fff;
+  display: flex;
+  align-items: center;
+  height: 240px;
+  padding: 0 80px;
+
+  .icon {
+    font-size: 80px;
+    color: #1dc779;
+  }
+
+  .tip {
+    padding-left: 10px;
+    flex: 1;
+
+    p {
+      &:first-child {
+        font-size: 20px;
+        margin-bottom: 5px;
+      }
+
+      &:last-child {
+        color: #999;
+        font-size: 16px;
+      }
+    }
+  }
+
+  .amount {
+    span {
+      &:first-child {
+        font-size: 16px;
+        color: #999;
+      }
+
+      &:last-child {
+        color: $priceColor;
+        font-size: 20px;
+      }
+    }
+  }
+}
+
+.pay-type {
+  margin-top: 20px;
+  background-color: #fff;
+  padding-bottom: 70px;
+
+  p {
+    line-height: 70px;
+    height: 70px;
+    padding-left: 30px;
+    font-size: 16px;
+
+    &.head {
+      border-bottom: 1px solid #f5f5f5;
+    }
+  }
+
+  .btn {
+    width: 150px;
+    height: 50px;
+    border: 1px solid #e4e4e4;
+    text-align: center;
+    line-height: 48px;
+    margin-left: 30px;
+    color: #666666;
+    display: inline-block;
+
+    &.active,
+    &:hover {
+      border-color: $xtxColor;
+    }
+
+    &.alipay {
+      background: url(https://cdn.cnbj1.fds.api.mi-img.com/mi-mall/7b6b02396368c9314528c0bbd85a2e06.png) no-repeat center / contain;
+    }
+
+    &.wx {
+      background: url(https://cdn.cnbj1.fds.api.mi-img.com/mi-mall/c66f98cff8649bd5ba722c2e8067c6ca.jpg) no-repeat center / contain;
+    }
+  }
+}
+</style>
+```
+
+配置路由信息
+
+```js
+{
+  path:'/pay',
+  component: Pay,
+}
+```
+
+配置生成订单的接口
+
+src/apis/checkout.js
+
+```js
+//  创建订单
+export const createOrderAPI = (data)=>{
+  return request({
+    url:'/member/order',
+    method:'POST',
+    data
+  })
+}
+```
+
+创建订单页发送请求回调
+
+```js
+import { useRouter } from 'vue-router'
+import { useCartStore } from '@/stores/cartStore'
+import { createOrderAPI } from '@/apis/checkout'
+const router = useRouter()
+
+const cartStore = useCartStore()
+
+// 创建订单
+const createOrder = async()=>{
+  const res = await createOrderAPI({
+    deliveryTimeType:1,
+    payType:1,
+    payChannel:1,
+    buyerMessage:'',
+    goods:checkInfo.value.goods.map(item=>{
+      return {
+        skuId:item.skuId,
+        count:item.count
+      }
+    }),
+    addressId:curAddress.value.id
+  })
+  const orderId = res.result.id
+  router.push({
+    path:'/pay',
+    query:{
+      id:orderId
+    }
+  })
+  // 更新购物车
+  cartStore.updateNewList()
+}
+
+
+<el-button type="primary" size="large" @click="createOrder">提交订单</el-button>
+```
