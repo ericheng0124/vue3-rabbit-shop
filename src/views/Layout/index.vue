@@ -25,4 +25,3 @@ onMounted(()=>{
   <RouterView />
   <LayoutFooter />
 </template>
-@/stores/categoryStore
