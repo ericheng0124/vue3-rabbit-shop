@@ -8450,7 +8450,7 @@ import UserOrder from '@/views/Member/components/UserOrder.vue'
 }
 ```
 
-#### 21.2 会员中心-个人信息渲染
+#### 21.2 会员中心 - 个人信息渲染
 
 先获取pinia中的user信息
 
@@ -8502,7 +8502,7 @@ import GoodsItem from '@/views/Home/components/GoodsItem.vue'
 <GoodsItem v-for="good in likeList" :key="good.id" :goods="good" />
 ```
 
-#### 21.3 会员中心-订单基础列表渲染
+#### 21.3 会员中心 - 订单基础列表渲染
 
 1. 封装接口
 src/apis/order.js
@@ -8579,7 +8579,7 @@ const getOrderList = async()=>{
 onMounted(()=>getOrderList())
 ```
 
-#### 21.4 会员中心-tab切换实现
+#### 21.4 会员中心 - tab切换实现
 
 **重点：切换tab时`修改 orderState 参数`，再次发起请求获取订单列表数据**
 
@@ -8611,3 +8611,51 @@ const tabChange = (type)=>{
   getOrderList()
 }
 ```
+
+#### 21.5 会员中心 - 分页逻辑实现
+
+1. 使用列表数据生成分页（页数 = 总条数 / 每页数）
+  - 使用total属性，绑定总条数
+  ```js
+  const totalPage = ref(0)
+
+  // 获取订单列表
+  const getOrderList = async()=>{
+    const res = await getUserOrder(params.value)
+    console.log(res)
+    orderList.value = res.result.items
+    totalPage.value = res.result.counts
+  }
+  ```
+
+  - 使用page-size属性绑定给每页条数
+  ```js
+  <el-pagination :total="totalPage" :page-size="params.pageSize" background layout="prev, pager, next" />
+  ```
+
+
+2. 切换分页修改page参数，再次获取订单列表数据
+  - 绑定current-change事件
+  ```js
+  <el-pagination :total="totalPage" :page-size="params.pageSize" @current-change="pageChange" background layout="prev, pager, next" />
+  ```
+
+  - 拿到当前页
+  ```js
+  // 获取当前页码
+  const pageChange = (page)=>{
+    console.log(page)
+  }
+  ```
+
+  - 使用最新的页数发起请求数据
+  ```js
+  // 获取当前页码
+  const pageChange = (page)=>{
+    // console.log(page)
+    params.value.page = page
+    getOrderList()
+  }
+  ```
+
+  
