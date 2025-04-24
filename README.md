@@ -8450,3 +8450,54 @@ import UserOrder from '@/views/Member/components/UserOrder.vue'
 }
 ```
 
+#### 21.2 会员中心-个人信息渲染
+
+先获取pinia中的user信息
+
+```js
+import { useUserStore } from '@/stores/userStore'
+
+const userStore = useUserStore()
+```
+
+在根据接口文档，新建添加猜你喜欢接口
+src/apis/user.js
+
+```js
+// 猜你喜欢接口
+export const getLikeListAPI = ({ limit = 4 }) => {
+  return request({
+    url:'/goods/relevant',
+    params: {
+      limit 
+    }
+  })
+}
+```
+
+在UserInfo组件中引入，并获取信息在渲染模板
+
+```js
+import { getLikeListAPI } from '@/apis/user'
+
+const likeList = ref([])
+
+const getLikeList = async()=>{
+  const res = await getLikeListAPI({limit:4})
+  likeList.value = res.result
+}
+
+onMounted(()=>{
+  getLikeList()
+})
+
+```
+
+这里渲染模板需要用到之前Home组件中的GoodsItem组件
+
+引入组件并将数据传递给改组件渲染
+```js
+import GoodsItem from '@/views/Home/components/GoodsItem.vue'
+
+<GoodsItem v-for="good in likeList" :key="good.id" :goods="good" />
+```
