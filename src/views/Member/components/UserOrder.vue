@@ -2,6 +2,8 @@
 import { onMounted, ref } from "vue"
 import { getUserOrder } from "@/apis/order"
 
+const loading = ref(true)
+
 // tab列表
 const tabTypes = [
   { name: "all", label: "全部订单" },
@@ -28,6 +30,7 @@ const params = ref({
 const getOrderList = async()=>{
   const res = await getUserOrder(params.value)
   // console.log(res)
+  loading.value = false
   orderList.value = res.result.items
   totalPage.value = res.result.counts
 }
@@ -48,6 +51,19 @@ const pageChange = (page)=>{
   getOrderList()
 }
 
+
+const fomartPayState = (payState)=>{
+  const stateMap = {
+    1: "待付款",
+    2: "待发货",
+    3: "待收货",
+    4: "待评价",
+    5: "已完成",
+    6: "已取消"
+  }
+  return stateMap[payState]
+}
+
 </script>
 
 <template>
@@ -56,7 +72,10 @@ const pageChange = (page)=>{
       <!-- tab切换 -->
       <el-tab-pane v-for="item in tabTypes" :key="item.name" :label="item.label" />
 
-      <div class="main-container">
+      <div class="main-container" 
+        v-loading="loading" 
+        element-loading-text="数据加载中..."
+      >
         <div class="holder-container" v-if="orderList.length === 0">
           <el-empty description="暂无订单数据" />
         </div>
@@ -93,7 +112,7 @@ const pageChange = (page)=>{
                 </ul>
               </div>
               <div class="column state">
-                <p>{{ order.orderState }}</p>
+                <p>{{ fomartPayState(order.orderState) }}</p>
                 <p v-if="order.orderState === 3">
                   <a href="javascript:;" class="green">查看物流</a>
                 </p>

@@ -8658,4 +8658,59 @@ const tabChange = (type)=>{
   }
   ```
 
-  
+### 22 项目细节优化
+
+#### 22.1 会员中心默认显示个人中心组件
+
+将路由重定向到user组件
+src/router/index.js
+```js
+{
+  path:'/member',
+  component: Member,
+  children:[
+    {
+      path:'user',
+      component: UserInfo
+    },
+    {
+      path:'order',
+      component: UserOrder
+    }
+  ],
+  redirect:'/member/user'  // 重定向默认指向user
+}
+```
+
+
+#### 22.2 订单状态显示适配
+
+`思路：根据接口文档给到的状态码和中文的对应关系进行适配`
+
+
+#### 22.3 添加Loading效果
+
+**因为有些请求后端接口比较慢，为了效果更好这里添加Loading效果**
+
+获取订单时响应太慢
+
+找到订单表格的父标签给其添加v-loading属性,将loading的初始值为true，待获取到请求数据之后再将loading的值变更为false
+
+```js
+const loading = ref(true)
+
+<div class="main-container" 
+  v-loading="loading" 
+  element-loading-text="数据加载中..."
+>
+
+// 获取订单列表
+const getOrderList = async()=>{
+  const res = await getUserOrder(params.value)
+  // console.log(res)
+  loading.value = false
+  orderList.value = res.result.items
+  totalPage.value = res.result.counts
+}
+```
+
