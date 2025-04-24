@@ -8501,3 +8501,80 @@ import GoodsItem from '@/views/Home/components/GoodsItem.vue'
 
 <GoodsItem v-for="good in likeList" :key="good.id" :goods="good" />
 ```
+
+#### 21.3 会员中心-订单基础列表渲染
+
+1. 封装接口
+src/apis/order.js
+```js
+import request from '@/utils/http'
+
+// 获取订单列表
+/*
+params: {
+	orderState:0,
+  page:1,
+  pageSize:2
+}
+*/
+
+
+export const getUserOrder = (params) => {
+  return request({
+    url:'/member/order',
+    method:'GET',
+    params
+  })
+}
+
+```
+
+2. 准备基础请求参数
+
+```js
+import { ref } from "vue"
+
+// 订单列表
+const orderList = ref([])
+
+const params = ref({
+  orderState:0,
+  page:1,
+  pageSize:2
+})
+
+
+```
+
+3. 调用接口请求数据
+```js
+import { onMounted, ref } from "vue"
+import { getUserOrder } from "@/apis/order"
+
+// tab列表
+const tabTypes = [
+  { name: "all", label: "全部订单" },
+  { name: "unpay", label: "待付款" },
+  { name: "deliver", label: "待发货" },
+  { name: "receive", label: "待收货" },
+  { name: "comment", label: "待评价" },
+  { name: "complete", label: "已完成" },
+  { name: "cancel", label: "已取消" }
+]
+// 订单列表
+const orderList = ref([])
+
+const params = ref({
+  orderState:0,
+  page:1,
+  pageSize:2
+})
+
+// 获取订单列表
+const getOrderList = async()=>{
+  const res = await getUserOrder(params.value)
+  orderList.value = res.result.items
+}
+
+onMounted(()=>getOrderList())
+```
