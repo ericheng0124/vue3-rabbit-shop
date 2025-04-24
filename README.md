@@ -8578,3 +8578,36 @@ const getOrderList = async()=>{
 
 onMounted(()=>getOrderList())
 ```
+
+#### 21.4 会员中心-tab切换实现
+
+**重点：切换tab时`修改 orderState 参数`，再次发起请求获取订单列表数据**
+
+- 1. 绑定tab-change事件
+src/views/Member/components/UserOrder.vue
+```js
+<el-tabs @tab-change="tabChange">
+  <!-- tab切换 -->
+  <el-tab-pane v-for="item in tabTypes" :key="item.name" :label="item.label" />
+  ....
+</el-tabs>
+```
+
+- 2. 获取当前激活的tab项数据
+`根据文档可知Tab-pane Attributes name属性 与选项卡绑定值 value 对应的标识符，表示选项卡别名。默认值是tab面板的序列号，如第一个 tab 是 0`
+**这里没有绑定name属性所以默认是下标值**
+```js
+const tabChange = (type)=>{
+  console.log(type)
+}
+```
+
+- 3. 使用最新的tab项数据发送请求
+```js
+// tab切换
+const tabChange = (type)=>{
+  // console.log(tab)
+  params.value.orderState = type
+  getOrderList()
+}
+```
