@@ -8712,5 +8712,440 @@ const getOrderList = async()=>{
   orderList.value = res.result.items
   totalPage.value = res.result.counts
 }
+
+// tab切换
+const tabChange = (type)=>{
+  // console.log(tab)
+  params.value.orderState = type
+  loading.value = true
+  getOrderList()
+}
 ```
+
+
+### 23 SKU组件封装
+
+#### 23.1 准备模板渲染规格数据
+
+```js
+<script setup>
+import { onMounted, ref } from 'vue'
+import axios from 'axios'
+// 商品数据
+const goods = ref({})
+const getGoods = async () => {
+  // 1135076  初始化就有无库存的规格
+  // 1369155859933827074 更新之后有无库存项（蓝色-20cm-中国）
+  const res = await axios.get('http://pcapi-xiaotuxian-front-devtest.itheima.net/goods?id=1369155859933827074')
+  goods.value = res.data.result
+}
+onMounted(() => getGoods())
+
+</script>
+
+<template>
+  <div class="goods-sku">
+    <dl v-for="item in goods.specs" :key="item.id">
+      <dt>{{ item.name }}</dt>
+      <dd>
+        <template v-for="val in item.values" :key="val.name">
+          <!-- 图片类型规格 -->
+          <img v-if="val.picture" :src="val.picture" :title="val.name">
+          <!-- 文字类型规格 -->
+          <span v-else>{{ val.name }}</span>
+        </template>
+      </dd>
+    </dl>
+  </div>
+</template>
+
+<style scoped lang="scss">
+@mixin sku-state-mixin {
+  border: 1px solid #e4e4e4;
+  margin-right: 10px;
+  cursor: pointer;
+
+  &.selected {
+    border-color: #27ba9b;
+  }
+
+  &.disabled {
+    opacity: 0.6;
+    border-style: dashed;
+    cursor: not-allowed;
+  }
+}
+
+.goods-sku {
+  padding-left: 10px;
+  padding-top: 20px;
+
+  dl {
+    display: flex;
+    padding-bottom: 20px;
+    align-items: center;
+
+    dt {
+      width: 50px;
+      color: #999;
+    }
+
+    dd {
+      flex: 1;
+      color: #666;
+
+      >img {
+        width: 50px;
+        height: 50px;
+        margin-bottom: 4px;
+        @include sku-state-mixin;
+      }
+
+      >span {
+        display: inline-block;
+        height: 30px;
+        line-height: 28px;
+        padding: 0 20px;
+        margin-bottom: 4px;
+        @include sku-state-mixin;
+      }
+    }
+  }
+}
+</style>
+```
+
+#### 23.2 点击规格更新选中状态
+
+**核心思路：**
+- 1. 如果当前已经激活了，就取消激活。
+- 2. 如果当前未激活，`就把和自己同排的其他规格取消激活，再把自己激活`。
+
+**响应式数据设计**
+每一个规格项都添加一个selected字段来决定是否激活，true为激活，false为未激活。
+
+**样式处理**
+使用selected字段配合动态class属性，selected为true就显示对应激活类名。
+
+```js
+<script setup>
+import { onMounted, ref } from 'vue'
+import axios from 'axios'
+// 商品数据
+const goods = ref({})
+const getGoods = async () => {
+  // 1135076  初始化就有无库存的规格
+  // 1369155859933827074 更新之后有无库存项（蓝色-20cm-中国）
+  const res = await axios.get('http://pcapi-xiaotuxian-front-devtest.itheima.net/goods?id=1369155859933827074')
+  goods.value = res.data.result
+}
+onMounted(() => getGoods())
+
+// 切换选中状态
+const changeSelectedStatus = (item,val)=>{
+  // 根据分析知道需要获取自己和同排数据，需要通过参数传递
+  // item：同排对象
+  // val：当前对象
+  if(val.selected){
+    val.selected = false
+  }else{
+    // 取消同排选中状态
+    item.values.forEach(v=>v.selected = false)
+    // 激活当前项
+    val.selected = true
+  }
+}
+
+</script>
+
+<template>
+  <div class="goods-sku">
+    <dl v-for="item in goods.specs" :key="item.id">
+      <dt>{{ item.name }}</dt>
+      <dd>
+        <template v-for="val in item.values" :key="val.name">
+          <!-- 图片类型规格 -->
+          <img :class="{selected:val.selected}"  v-if="val.picture" :src="val.picture" :title="val.name" @click="changeSelectedStatus(item,val)">
+          <!-- 文字类型规格 -->
+          <span :class="{selected:val.selected}" v-else @click="changeSelectedStatus(item,val)">{{ val.name }}</span>
+        </template>
+      </dd>
+    </dl>
+  </div>
+</template>
+```
+
+#### 23.3 点击规格更新禁用状态 
+
+##### 23.3.1 生成有效路径字典
+
+核心原理：当前的规格sku，或者组合起来的规格sku，在skus数组中对应选项的库存为零，当前规格会被禁用，生成路径字典是为了`协助和简化这个匹配过程`
+
+引入幕集算法
+src/Sku/power-set.js
+```js
+export default function bwPowerSet (originalSet) {
+  const subSets = []
+
+  // We will have 2^n possible combinations (where n is a length of original set).
+  // It is because for every element of original set we will decide whether to include
+  // it or not (2 options for each set element).
+  const numberOfCombinations = 2 ** originalSet.length
+
+  // Each number in binary representation in a range from 0 to 2^n does exactly what we need:
+  // it shows by its bits (0 or 1) whether to include related element from the set or not.
+  // For example, for the set {1, 2, 3} the binary number of 0b010 would mean that we need to
+  // include only "2" to the current set.
+  for (let combinationIndex = 0; combinationIndex < numberOfCombinations; combinationIndex += 1) {
+    const subSet = []
+
+    for (let setElementIndex = 0; setElementIndex < originalSet.length; setElementIndex += 1) {
+      // Decide whether we need to include current element into the subset or not.
+      if (combinationIndex & (1 << setElementIndex)) {
+        subSet.push(originalSet[setElementIndex])
+      }
+    }
+
+    // Add current subset to the list of all subsets.
+    subSets.push(subSet)
+  }
+
+  return subSets
+}
+```
+
+在Sku.vue中新建一个生成有效路径字典对象的方法
+
+```js
+// 生成有效路径字典对象
+const getPathMap = (goods)=>{
+  const pathMap = {}
+  // 1. 根据skus字段生成有效的sku数组
+  const effectiveSkus = goods.skus.filter(sku => sku.inventory > 0)
+  // 2. 根据得到的有效的sku使用算法（子集算法）生成有效路径字典 [1,2] => [[1],[2],[1,2]]
+  effectiveSkus.forEach(sku=>{
+    // 2.1 先获取当前sku的规格值valueName组成的数组
+    const selectedValArr = sku.specs.map(spec=>spec.valueName)
+    // 2.2 使用算法获取子集
+    const valueArrPowerSet = powerSet(selectedValArr)
+    // 3. 将得到的子集生成最终的路径字典对象
+    valueArrPowerSet.forEach(arr=>{
+      // 初始化key 使用数组的join方法 数组.join -> 字符串 作为对象的key
+      const key = arr.join('-')
+      // 如果已经存在当前key了  就往数组中直接添加skuId 如果不存在key 直接做赋值
+      if(pathMap[key]){
+        pathMap[key].push(sku.id)
+      }else{
+        pathMap[key]=[sku.id]
+      }
+    })
+  })
+  return pathMap
+}
+```
+
+在goods数据获取的时候调用一下查看获取到的有效数据字典
+
+```js
+const getGoods = async () => {
+  // 1135076  初始化就有无库存的规格
+  // 1369155859933827074 更新之后有无库存项（蓝色-20cm-中国）
+  const res = await axios.get('http://pcapi-xiaotuxian-front-devtest.itheima.net/goods?id=1369155859933827074')
+  goods.value = res.data.result
+  const pathMap = getPathMap(goods.value)
+  console.log(pathMap)
+}
+```
+
+##### 23.3.2 初始化规格禁用
+
+
+**思路：在数据一请求回来的时候，就遍历一遍每一个规格对象，使用name字段作为key去字典路径pathMap中做匹配，匹配不上则禁用**
+
+如何做到显示上的禁用呢？
+1. 新增一个disabled字段，匹配上路径字段，disabled为false（不禁用），匹配不上路径字段，disabled为true（禁用）
+2. 配合动态类名控制禁用类名
+
+
+在以获取到商品信息之后就初始化禁用掉
+
+先编写一个初始化禁用方法
+```js
+// 初始化禁用状态
+const initDisabledStatus = (specs,pathMap)=>{
+  specs.forEach(spec=>{
+    spec.values.forEach(val=>{
+      if(pathMap[val.name]){
+        // 匹配上了
+        val.disabled = false
+      }else{
+        val.disabled = true
+      }
+    })
+  })
+}
+```
+
+在页面一获取到商品信息的时候就调用这个方法，将商品的specs和之前生成的pathMap路劲字典传入进去
+```js
+const getGoods = async () => {
+  // 1135076  1135075 初始化就有无库存的规格
+  // 1369155859933827074 更新之后有无库存项（蓝色-20cm-中国）
+  const res = await axios.get('http://pcapi-xiaotuxian-front-devtest.itheima.net/goods?id=1135075')
+  goods.value = res.data.result
+  const pathMap = getPathMap(goods.value)
+  console.log(pathMap)
+  initDisabledStatus(goods.value.specs,pathMap)
+}
+```
+
+此时就得到了带有disabled属性了，然后通过动态类名控制禁用类名，实现禁用的显示效果
+
+```js
+<img 
+  :class="{selected:val.selected,disabled:val.disabled}" 
+  v-if="val.picture" 
+  :src="val.picture" 
+  :title="val.name" 
+  @click="changeSelectedStatus(item,val)"
+/>
+```
+
+还需要实现无法点击的效果，需要在切换选中状态的方法中添加一个判断，一旦disabled为true就直接return
+
+```js
+// 切换选中状态
+const changeSelectedStatus = (item,val)=>{
+  // 如果当前项是禁用状态 直接return
+  if(val.disabled) return
+  // 根据分析知道需要获取自己和同排数据，需要通过参数传递
+  // item：同排对象
+  // val：当前对象
+  if(val.selected){
+    val.selected = false
+  }else{
+    // 取消同排选中状态
+    item.values.forEach(v => v.selected = false)
+    // 激活当前项
+    val.selected = true
+  }
+}
+```
+
+##### 23.3.3 点击时组合禁用更新
+
+**思路（点击规格时）：**
+1. `按照顺序`得到的规格选中项的数组`['蓝色','20cm',undefined]`
+2. 遍历每一个规格
+  - 2.1 把name字段的值填充到对应的位置
+  - 2.2 过滤掉undefined项使用join方法形成一个有效的key
+  - 2.3 使用key去pathMap中进行匹配，匹配不上，则当前项禁用 
+
+新建一个获取选中项匹配的数组
+```js
+// 获取选中项的匹配数组
+const getSelectedValues = (specs)=>{
+  const arr = []
+  specs.forEach(spec => {
+    // 目标：找到values中selected为true的项，然后把它的name字段添加到数组的对应位置
+    const selectedArr = spec.values.find(item=>item.selected)
+    arr.push(selectedArr ? selectedArr.name : undefined)
+  })
+  return arr
+}
+```
+
+```js
+// 切换时更新禁用状态
+const updateDisabledStatus = (specs,pathMap)=>{
+  specs.forEach((spec,index)=>{
+    // 获取选中项匹配的数组
+    const selectedValues = getSelectedValues(specs)
+    // 2.1 把name字段的值填充到对应的位置
+    spec.values.forEach(item=>{
+      selectedValues[index]=item.name
+      // 2.2 过滤掉undefined项使用join方法形成一个有效的key
+      const key = selectedValues.filter(value=>value).join('-')
+      // 如果当前key存在 说明有库存
+      // 2.3 使用key去pathMap中进行匹配，匹配不上，则当前项禁用
+      if(pathMap[key]){
+        item.disabled = false
+      }else{
+        item.disabled = true
+      }
+    })
+  })
+}
+```
+切换时调用一下这个更新方法
+```js
+// 为了方便传参将pathMap提级
+let pathMap = {}
+
+const getGoods = async () => {
+  // 1135076  1135075 初始化就有无库存的规格
+  // 1369155859933827074 更新之后有无库存项（蓝色-20cm-中国）
+  const res = await axios.get('http://pcapi-xiaotuxian-front-devtest.itheima.net/goods?id=1369155859933827074')
+  goods.value = res.data.result
+  pathMap = getPathMap(goods.value)
+  console.log(pathMap)
+  initDisabledStatus(goods.value.specs,pathMap)
+}
+
+// 切换选中状态
+const changeSelectedStatus = (item,val)=>{
+  // 如果当前项是禁用状态 直接return
+  if(val.disabled) return
+  // 根据分析知道需要获取自己和同排数据，需要通过参数传递
+  // item：同排对象
+  // val：当前对象
+  if(val.selected){
+    val.selected = false
+  }else{
+    // 取消同排选中状态
+    item.values.forEach(v => v.selected = false)
+    // 激活当前项
+    val.selected = true
+  }
+  // const arr = getSelectedValues(goods.value.specs)
+  // console.log(arr)
+  // 调用更新
+  updateDisabledStatus(goods.value.specs,pathMap)
+}
+```
+
+#### 23.4 产出有效的SKU信息
+
+**如何判断当前用户已经选择了所有有效的规格？**
+
+在已选择项数组 例：`['蓝色','20cm',undefined]`中找不到undefined，那么用户已经选择了所有有效规格，此时可以产出数据
+
+**如何获取当前sku信息对象？**
+
+把已选择项数组拼接为路径字典的key，区路径字典pathMap中找即可
+
+在点击切换时产出
+```js
+// 切换选中状态
+const changeSelectedStatus = (item,val)=>{
+  // ... 以上代码不变
+
+  // 产出SKU对象数据
+  const index = getSelectedValues(goods.value.specs).findIndex(item => item === undefined)
+  if(index != -1){
+    console.log('当前信息不完整')
+  }else{
+    console.log('未找到，当前信息完整')
+    // 获取sku对象
+    const key = getSelectedValues(goods.value.specs).join('-')
+    const skuIds = pathMap[key]
+    console.log(skuIds)
+    // 以skuIds作为匹配项去goods.value.skus中查找
+    const skuObj = goods.value.skus.find(item=>item.id === skuIds[0])
+    console.log('sku对象为：',skuObj)
+  }
+}
+```
+
+
 

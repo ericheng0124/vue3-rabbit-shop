@@ -41,6 +41,7 @@ onMounted(()=>getOrderList())
 const tabChange = (type)=>{
   // console.log(tab)
   params.value.orderState = type
+  loading.value = true
   getOrderList()
 }
 
@@ -72,10 +73,7 @@ const fomartPayState = (payState)=>{
       <!-- tab切换 -->
       <el-tab-pane v-for="item in tabTypes" :key="item.name" :label="item.label" />
 
-      <div class="main-container" 
-        v-loading="loading" 
-        element-loading-text="数据加载中..."
-      >
+      <div class="main-container" v-loading="loading" element-loading-text="数据加载中...">
         <div class="holder-container" v-if="orderList.length === 0">
           <el-empty description="暂无订单数据" />
         </div>
