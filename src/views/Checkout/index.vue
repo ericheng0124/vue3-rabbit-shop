@@ -12,9 +12,20 @@ const curAddress = ref({}) // 默认地址对象
 // 控制弹框显示
 const showDialog = ref(false)
 
+const selectedGoods = ref([])
+
 const getCheckInfo = async()=>{
   const res = await getCheckInfoAPI()
   checkInfo.value = res.result
+  // 这里需要对 checkInfo.value.goods 进行处理,需要去比对一下pinia cartList中 勾选的商品，即 cartList中selected为true的商品
+  console.log(checkInfo.value)
+  cartStore.cartList.forEach(item=>{
+    if(item.selected){
+      selectedGoods.value.push(checkInfo.value.goods.find(i=>i.skuId === item.skuId))
+    }
+  })
+  checkInfo.value.goods = selectedGoods.value
+  // console.log(checkInfo.value)
   // 适配默认地址
   // 从地址列表中筛选出来isDefault为0的那一项(可以使用find方法或者filter方法)
   const item = checkInfo.value.userAddresses.find(item=>item.isDefault === 0)
@@ -28,7 +39,7 @@ const activeAddress = ref({})
 
 const switchAddress = (item)=>{
   activeAddress.value = item
-  console.log(activeAddress.value)
+  // console.log(activeAddress.value)
 }
 
 const confirm = ()=>{

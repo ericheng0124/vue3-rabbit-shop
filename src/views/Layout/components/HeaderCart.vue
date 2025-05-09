@@ -1,7 +1,10 @@
 <script setup>
 import { useCartStore } from '@/stores/cartStore'
 
+
 const cartStore = useCartStore()
+
+
 </script>
 
 <template>
@@ -10,9 +13,8 @@ const cartStore = useCartStore()
       <i class="iconfont icon-cart"></i><em v-if="cartStore.cartList.length>0">{{ cartStore.cartList.length }}</em>
     </a>
     <div class="layer">
-      <div class="list">
-
-        <div class="item" v-for="i in cartStore.cartList" :key="i">
+      <div v-if="cartStore.cartList.length>0" class="list">
+        <div  class="item" v-for="i in cartStore.cartList" :key="i">
           <RouterLink to="">
             <img :src="i.picture" alt="" />
             <div class="center">
@@ -30,12 +32,15 @@ const cartStore = useCartStore()
         </div>
 
       </div>
+      <div v-else class="list-empty">
+        <p style="">您的购物车空空如也！</p>
+      </div>
       <div class="foot">
         <div class="total">
           <p>共 {{ cartStore.allCount }} 件商品</p>
           <p>&yen; {{cartStore.allPirce.toFixed(2)}} </p>
         </div>
-        <el-button size="large" type="primary" @click="$router.push('/cartlist')" >去购物车结算</el-button>
+        <el-button size="large" type="primary" @click="$router.push('/cartlist')" :disabled="!cartStore.cartList.length > 0">去购物车结算</el-button>
       </div>
     </div>
 </div>
@@ -217,6 +222,17 @@ const cartStore = useCartStore()
           }
         }
       }
+    }
+  }
+  .list-empty{
+    display: flex;
+    justify-content: center; /* 水平居中 */
+    align-items: center;    /* 垂直居中 */
+    height: 310px;
+    p {
+      color: #999;
+      padding: 20px 0;
+      font-size: 18px;
     }
   }
 }

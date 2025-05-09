@@ -8,9 +8,12 @@ import { insertCartAPI,findNewCartListAPI,delCartListAPI } from "@/apis/cart"
 
 export const useCartStore = defineStore('cart',()=>{
   const userStore = useUserStore()
+  // 判断用户是否登陆
   const isLogin = computed(()=>userStore.userInfo.token)
   // 1. 定义state
   const cartList = ref([])
+
+  // 2. 定义action
 
   // 获取最新购物车列表action
   const updateNewList = async()=>{
@@ -20,7 +23,8 @@ export const useCartStore = defineStore('cart',()=>{
     cartList.value = res.result
   }
 
-  // 2. 定义action - addCart
+  
+  // addCart - 添加购物车
   const addCart = async(goods)=>{
     const {skuId,count} = goods
     if(isLogin.value){
@@ -46,6 +50,7 @@ export const useCartStore = defineStore('cart',()=>{
       }
     }
   }
+
   // 删除购物车
   const delCart = async(skuId)=>{
     if(isLogin.value){
@@ -61,12 +66,14 @@ export const useCartStore = defineStore('cart',()=>{
       // 思路：
       // 1. 找到要删除的商品在列表中的下标值 - splice
       // const idx = cartList.value.findIndex(item=>skuId === item.skuId)
-      // cartList.value.splice(idx,1)
+      // cartList.value.splice(idx,1) 
       // 2. 使用数组的过滤方法 - filter
       const newList = cartList.value.filter(item=>skuId !== item.skuId)
       cartList.value = newList
     }
   }
+
+  
 
   // 清空购物车action
   const clearCart = ()=>{
@@ -81,6 +88,7 @@ export const useCartStore = defineStore('cart',()=>{
 
   // 全选功能
   const allCheck = (selected)=>{
+    // 将cartList的每一项的selected的值都设置为当前全选框的状态
     // 遍历cartList，修改每一项的selected属性
     cartList.value.forEach(item=>item.selected = selected)
   }
@@ -92,12 +100,13 @@ export const useCartStore = defineStore('cart',()=>{
   // 2. 总价 所有项的count*price之和
   const allPirce = computed(()=>cartList.value.reduce((a,c)=>a+c.count*c.price,0))
   // 3. 全选功能
-  const isAll = computed(()=>cartList.value.every(item=>item.selected))
+  const isAll = computed(()=>cartList.value.length > 0? cartList.value.every(item=>item.selected):false)
   // 4. 选中的商品数量
   const selectedCount = computed(()=>cartList.value.filter(item=>item.selected).reduce((int,cur)=>int+cur.count,0))
   // 5. 选中的商品总价
   const selectedPrice = computed(()=>cartList.value.filter(item=>item.selected).reduce((int,cur)=>int+cur.count*cur.price,0))
-
+  // 6. 选中的商品列表
+  const selectedList = computed(()=>cartList.value.filter(item=>item.selected))
 
   // 3. retrun 出去所有的state和action
   return {
@@ -112,7 +121,8 @@ export const useCartStore = defineStore('cart',()=>{
     isAll,
     allCheck,
     selectedCount,
-    selectedPrice
+    selectedPrice,
+    selectedList
   }
 },{
   persist:true

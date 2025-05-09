@@ -48,7 +48,7 @@ const addCart = ()=>{
       count:count.value, // 商品数量
       skuId:skuObj.skuId, // skuId
       attrsText:skuObj.specsText, // 商品规格文本
-      select:true // 商品是否选中
+      selected:true // 商品是否选中
     })
   }else{
     // 规格未选择全 提示用户
